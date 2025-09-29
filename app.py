@@ -5,30 +5,41 @@ import uuid
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# --- إعداد البيئة والاتصال بـ Supabase ---
-load_dotenv()
-supabase_url: str = os.environ.get("SUPABASE_URL")
-supabase_key: str = os.environ.get("SUPABASE_KEY")
+# --- دوال الإعداد والتخزين المؤقت (Setup and Caching Functions) ---
 
-if not supabase_url or not supabase_key:
-    st.error("Error: Supabase environment variables are not set. Please check your .env file.")
-    supabase = None
-else:
+load_dotenv()
+
+# استخدام st.cache_resource لضمان تهيئة Supabase مرة واحدة فقط
+@st.cache_resource
+def init_supabase_client() -> Client | None:
+    """تهيئة عميل Supabase وضمان عدم تكرار العملية."""
+    supabase_url: str = os.environ.get("SUPABASE_URL")
+    supabase_key: str = os.environ.get("SUPABASE_KEY")
+
+    if not supabase_url or not supabase_key:
+        st.error("Error: Supabase environment variables are not set. Please check your .env file.")
+        return None
     try:
-        supabase: Client = create_client(supabase_url, supabase_key)
+        # st.cache_resource يضمن أن هذا الكائن لا يُنشأ إلا مرة واحدة
+        return create_client(supabase_url, supabase_key)
     except Exception as e:
         st.error(f"Error connecting to Supabase: {e}")
-        supabase = None
+        return None
 
-# تهيئة حالة الجلسة للمستخدم
-if 'user' not in st.session_state:
-    st.session_state['user'] = None
-if 'otp_sent' not in st.session_state:
-    st.session_state['otp_sent'] = False
-if 'user_email' not in st.session_state:
-    st.session_state['user_email'] = ""
-if 'page' not in st.session_state:
-    st.session_state['page'] = 'Home'
+def init_session_state():
+    """تهيئة متغيرات حالة الجلسة (Session State)."""
+    if 'user' not in st.session_state:
+        st.session_state['user'] = None
+    if 'otp_sent' not in st.session_state:
+        st.session_state['otp_sent'] = False
+    if 'user_email' not in st.session_state:
+        st.session_state['user_email'] = ""
+    if 'page' not in st.session_state:
+        st.session_state['page'] = 'Home'
+
+# --- الإعداد الرئيسي للتطبيق ---
+supabase = init_supabase_client()
+init_session_state()
 
 # --- دوال المصادقة (Auth Functions) ---
 
@@ -69,7 +80,7 @@ def logout_user():
     except Exception as e:
         st.error(f"Error during logout: {e}")
 
-# --- دوال إدارة المنتجات والملفات ---
+# --- دوال إدارة المنتجات والملفات (Product and File Management Functions) ---
 
 # دالة رفع الصورة إلى Supabase Storage
 def upload_image_to_storage(image_file):
@@ -85,8 +96,8 @@ def upload_image_to_storage(image_file):
 
         # رفع الملف إلى Supabase Storage
         supabase.storage.from_(bucket_name).upload(
-            file=file_bytes, 
-            path=file_name, 
+            file=file_bytes,
+            path=file_name,
             file_options={"content-type": image_file.type}
         ).execute()
 
@@ -199,7 +210,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -249,23 +260,23 @@ def show_edit_delete_form():
                 new_protein = st.number_input("Protein (g)", value=float(selected_product.get('protein', 0.0)), min_value=0.0)
                 # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
                 new_fats = st.number_input("Fats (g)", value=float(selected_product.get('fats', 0.0)), min_value=0.0)
-                
+
                 suitability_options = ("Suitable", "Moderately Suitable", "Not Suitable")
                 try:
                     current_suitability_index = suitability_options.index(selected_product['suitability'])
                 except ValueError:
                     # Handle case where value from DB is not in options
                     current_suitability_index = 0
-                
+
                 new_suitability = st.selectbox("Is this product suitable for diabetics?", suitability_options, index=current_suitability_index)
                 new_image = st.file_uploader("Upload new image (optional)", type=["png", "jpg", "jpeg"])
-                
+
                 col1, col2 = st.columns(2)
                 with col1:
                     update_button = st.form_submit_button("Update Product")
                 with col2:
                     delete_button = st.form_submit_button("Delete Product")
-                
+
                 if update_button:
                     image_url_to_update = selected_product['image_url']
                     if new_image:
@@ -276,7 +287,7 @@ def show_edit_delete_form():
                         data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
                         if new_image: data_to_update["image_url"] = image_url_to_update
                         update_product_in_db(selected_product['id'], data_to_update)
-                
+
                 if delete_button:
                     delete_product_from_db(selected_product['id'])
         else:
