@@ -89,17 +89,19 @@ def upload_image_to_storage(image_file):
         # إنشاء اسم ملف فريد باستخدام UUID
         file_extension = image_file.name.split(".")[-1]
         file_name = f"{uuid.uuid4()}.{file_extension}"
-        bucket_name = "product_images" # تأكد من وجود bucket بهذا الاسم في Supabase Storage
+        # **هام:** يجب التأكد من إنشاء bucket بنفس هذا الاسم في لوحة تحكم Supabase Storage
+        bucket_name = "product_images" 
 
         # قراءة محتوى الملف
         file_bytes = image_file.read()
 
         # رفع الملف إلى Supabase Storage
+        # تم إزالة .execute() لأن دالة upload() تنفذ العملية مباشرة ولا ترجع كائن execute
         supabase.storage.from_(bucket_name).upload(
             file=file_bytes,
             path=file_name,
             file_options={"content-type": image_file.type}
-        ).execute()
+        )
 
         # الحصول على الرابط العام للصورة المرفوعة
         public_url = supabase.storage.from_(bucket_name).get_public_url(file_name)
@@ -220,7 +222,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -363,5 +365,3 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
-
-
