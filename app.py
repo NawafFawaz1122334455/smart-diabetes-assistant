@@ -197,7 +197,9 @@ def show_products_page():
                 st.subheader(f"{product['name']} - Suitability: {product['suitability']}")
                 st.image(product['image_url'], width=200)
                 st.write(f"**Calories:** {product['calories']}")
-                st.write(f"**Carbs (g):** {product.get('carbs', 'N/A')}") # عرض الكارب
+                # استخدام .get للحماية من عدم وجود العمود + افتراض 'N/A' إذا كانت القيمة None
+                carbs_value = product.get('carbs')
+                st.write(f"**Carbs (g):** {carbs_value if carbs_value is not None else 'N/A'}")
                 st.write(f"**Sugar:** {product['sugar']}g")
                 st.write(f"**Protein:** {product['protein']}g")
                 st.write(f"**Fats:** {product['fats']}g")
@@ -210,7 +212,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "Nn1122334455"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -247,49 +249,53 @@ def show_edit_delete_form():
         if products:
             product_names = {product['name']: product for product in products}
             selected_product_name = st.selectbox("Select a product to edit", list(product_names.keys()))
-            selected_product = product_names[selected_product_name]
-            with st.form(key="edit_product_form_key"):
-                st.image(selected_product['image_url'], width=200)
-                new_name = st.text_input("Product Name", value=selected_product['name'])
-                new_calories = st.number_input("Calories", value=selected_product['calories'], min_value=0)
-                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
-                new_sugar = st.number_input("Sugar (g)", value=float(selected_product.get('sugar', 0.0)), min_value=0.0)
-                # حقل الكربوهيدرات في التعديل
-                new_carbs = st.number_input("Carbohydrates (g)", value=float(selected_product.get('carbs', 0.0)), min_value=0.0)
-                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
-                new_protein = st.number_input("Protein (g)", value=float(selected_product.get('protein', 0.0)), min_value=0.0)
-                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
-                new_fats = st.number_input("Fats (g)", value=float(selected_product.get('fats', 0.0)), min_value=0.0)
 
-                suitability_options = ("Suitable", "Moderately Suitable", "Not Suitable")
-                try:
-                    current_suitability_index = suitability_options.index(selected_product['suitability'])
-                except ValueError:
-                    # Handle case where value from DB is not in options
-                    current_suitability_index = 0
+            if selected_product_name:
+                selected_product = product_names[selected_product_name]
+                with st.form(key="edit_product_form_key"):
+                    st.image(selected_product['image_url'], width=200)
+                    new_name = st.text_input("Product Name", value=selected_product['name'])
+                    new_calories = st.number_input("Calories", value=selected_product['calories'], min_value=0)
 
-                new_suitability = st.selectbox("Is this product suitable for diabetics?", suitability_options, index=current_suitability_index)
-                new_image = st.file_uploader("Upload new image (optional)", type=["png", "jpg", "jpeg"])
+                    # التصحيح النهائي: التحقق من None قبل التحويل إلى float
+                    def safe_number(key, product):
+                        value = product.get(key)
+                        return float(value) if value is not None else 0.0
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    update_button = st.form_submit_button("Update Product")
-                with col2:
-                    delete_button = st.form_submit_button("Delete Product")
+                    new_sugar = st.number_input("Sugar (g)", value=safe_number('sugar', selected_product), min_value=0.0)
+                    new_carbs = st.number_input("Carbohydrates (g)", value=safe_number('carbs', selected_product), min_value=0.0)
+                    new_protein = st.number_input("Protein (g)", value=safe_number('protein', selected_product), min_value=0.0)
+                    new_fats = st.number_input("Fats (g)", value=safe_number('fats', selected_product), min_value=0.0)
+                    
+                    suitability_options = ("Suitable", "Moderately Suitable", "Not Suitable")
+                    try:
+                        current_suitability_index = suitability_options.index(selected_product['suitability'])
+                    except ValueError:
+                        # Handle case where value from DB is not in options
+                        current_suitability_index = 0
 
-                if update_button:
-                    image_url_to_update = selected_product['image_url']
-                    if new_image:
-                        with st.spinner('Uploading new image...'):
-                            image_url_to_update = upload_image_to_storage(new_image)
-                    if image_url_to_update:
-                        # تم تحديث البيانات لتشمل 'carbs'
-                        data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
-                        if new_image: data_to_update["image_url"] = image_url_to_update
-                        update_product_in_db(selected_product['id'], data_to_update)
+                    new_suitability = st.selectbox("Is this product suitable for diabetics?", suitability_options, index=current_suitability_index)
+                    new_image = st.file_uploader("Upload new image (optional)", type=["png", "jpg", "jpeg"])
 
-                if delete_button:
-                    delete_product_from_db(selected_product['id'])
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        update_button = st.form_submit_button("Update Product")
+                    with col2:
+                        delete_button = st.form_submit_button("Delete Product")
+
+                    if update_button:
+                        image_url_to_update = selected_product['image_url']
+                        if new_image:
+                            with st.spinner('Uploading new image...'):
+                                image_url_to_update = upload_image_to_storage(new_image)
+                        if image_url_to_update:
+                            # تم تحديث البيانات لتشمل 'carbs'
+                            data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
+                            if new_image: data_to_update["image_url"] = image_url_to_update
+                            update_product_in_db(selected_product['id'], data_to_update)
+
+                    if delete_button:
+                        delete_product_from_db(selected_product['id'])
         else:
             st.info("No products available to edit or delete.")
     except Exception as e:
@@ -344,4 +350,3 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
-
