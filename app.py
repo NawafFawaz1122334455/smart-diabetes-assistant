@@ -1,5 +1,4 @@
 import streamlit as st
-import bcrypt
 import os
 import uuid
 from supabase import create_client, Client
@@ -30,7 +29,8 @@ def init_session_state():
     """تهيئة متغيرات حالة الجلسة (Session State)."""
     if 'user' not in st.session_state:
         st.session_state['user'] = None
-    if 'otp_sent' not in st.session_state:
+    # لم تعد تستخدم للتحقق من OTP بل لتأكيد إرسال رابط إعادة تعيين كلمة المرور
+    if 'otp_sent' not in st.session_state: 
         st.session_state['otp_sent'] = False
     if 'user_email' not in st.session_state:
         st.session_state['user_email'] = ""
@@ -43,30 +43,52 @@ init_session_state()
 
 # --- دوال المصادقة (Auth Functions) ---
 
-def send_otp(email):
+def signup_user(email, password):
+    """تسجيل مستخدم جديد باستخدام البريد وكلمة المرور."""
     if not supabase: return
     try:
-        supabase.auth.sign_in_with_otp({"email": email})
-        st.session_state['otp_sent'] = True
-        st.session_state['user_email'] = email
-        st.success("OTP has been sent to your email. Please check your inbox.")
-    except Exception as e:
-        st.error(f"Error sending OTP: {e}")
-
-def verify_otp(email, token):
-    if not supabase: return
-    try:
-        response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
+        # Supabase يتعامل مع تجزئة كلمة المرور (Password Hashing) تلقائياً
+        response = supabase.auth.sign_up({"email": email, "password": password})
         if response.user:
             st.session_state['user'] = response.user
-            st.session_state['otp_sent'] = False
-            st.session_state['user_email'] = ""
             st.session_state['page'] = 'Home'
-            st.success("Verification successful! You are now logged in.")
+            st.success("تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك.")
+            return True
         else:
-            st.error("Invalid OTP. Please try again.")
+            st.error("فشل التسجيل. قد يكون البريد الإلكتروني موجوداً بالفعل أو كلمة المرور ضعيفة.")
+            return False
     except Exception as e:
-        st.error(f"Error verifying OTP: {e}")
+        st.error(f"خطأ أثناء التسجيل: {e}")
+        return False
+
+def login_user(email, password):
+    """تسجيل دخول المستخدم باستخدام البريد وكلمة المرور."""
+    if not supabase: return
+    try:
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        if response.user:
+            st.session_state['user'] = response.user
+            st.session_state['page'] = 'Home'
+            st.success("تم تسجيل الدخول بنجاح!")
+            return True
+        else:
+            st.error("البريد الإلكتروني أو كلمة المرور غير صحيحة.")
+            return False
+    except Exception as e:
+        st.error(f"خطأ أثناء تسجيل الدخول: {e}")
+        return False
+
+def reset_password(email):
+    """إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني."""
+    if not supabase: return
+    try:
+        # Supabase يرسل رابط لإعادة تعيين كلمة المرور إلى البريد الإلكتروني
+        supabase.auth.reset_password_for_email(email)
+        st.session_state['otp_sent'] = True
+        st.session_state['user_email'] = email
+        st.success("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.")
+    except Exception as e:
+        st.error(f"خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور: {e}")
 
 def logout_user():
     if not supabase: return
@@ -76,9 +98,9 @@ def logout_user():
         st.session_state['otp_sent'] = False
         st.session_state['user_email'] = ""
         st.session_state['page'] = 'Home'
-        st.info("You have been logged out.")
+        st.info("تم تسجيل خروجك.")
     except Exception as e:
-        st.error(f"Error during logout: {e}")
+        st.error(f"خطأ أثناء تسجيل الخروج: {e}")
 
 # --- دوال إدارة المنتجات والملفات (Product and File Management Functions) ---
 
@@ -96,7 +118,6 @@ def upload_image_to_storage(image_file):
         file_bytes = image_file.read()
 
         # رفع الملف إلى Supabase Storage
-        # تم إزالة .execute() لأن دالة upload() تنفذ العملية مباشرة ولا ترجع كائن execute
         supabase.storage.from_(bucket_name).upload(
             file=file_bytes,
             path=file_name,
@@ -169,24 +190,49 @@ def get_exercise_recommendation(age, weight):
 # --- صفحات التطبيق (App Pages) ---
 
 def show_auth_page():
-    st.title("Login or Register")
-    if not st.session_state['otp_sent']:
-        with st.form(key="send_otp_form_key"):
-            email = st.text_input("Enter your email to receive a login code")
-            submit_button = st.form_submit_button("Send Code")
-            if submit_button and email:
-                send_otp(email)
-            elif submit_button:
-                st.warning("Please enter your email.")
-    else:
-        with st.form(key="verify_otp_form_key"):
-            st.write(f"A code has been sent to {st.session_state['user_email']}")
-            token = st.text_input("Enter the code from your email")
-            submit_button = st.form_submit_button("Verify Code")
-            if submit_button and token:
-                verify_otp(st.session_state['user_email'], token)
-            elif submit_button:
-                st.warning("Please enter the code.")
+    st.title("تسجيل الدخول أو التسجيل")
+
+    # اختيار الوضع: تسجيل الدخول، أو التسجيل، أو نسيت كلمة المرور
+    auth_mode = st.radio("اختر الوضع", ["تسجيل الدخول", "التسجيل", "نسيت كلمة المرور؟"], key="auth_mode")
+
+    if auth_mode == "تسجيل الدخول":
+        st.subheader("تسجيل الدخول باستخدام البريد وكلمة المرور")
+        with st.form(key="login_form_key"):
+            email = st.text_input("البريد الإلكتروني")
+            password = st.text_input("كلمة المرور", type="password")
+            submit_button = st.form_submit_button("تسجيل الدخول")
+            if submit_button:
+                if email and password:
+                    login_user(email, password)
+                else:
+                    st.warning("الرجاء إدخال كل من البريد الإلكتروني وكلمة المرور.")
+
+    elif auth_mode == "التسجيل":
+        st.subheader("إنشاء حساب جديد")
+        with st.form(key="register_form_key"):
+            email = st.text_input("البريد الإلكتروني")
+            password = st.text_input("كلمة المرور (لا تقل عن 6 أحرف)", type="password")
+            confirm_password = st.text_input("تأكيد كلمة المرور", type="password")
+            submit_button = st.form_submit_button("تسجيل")
+            if submit_button:
+                if email and password and confirm_password:
+                    if password == confirm_password:
+                        signup_user(email, password)
+                    else:
+                        st.error("كلمتا المرور غير متطابقتين.")
+                else:
+                    st.warning("الرجاء ملء جميع الحقول.")
+    
+    elif auth_mode == "نسيت كلمة المرور؟":
+        st.subheader("إعادة تعيين كلمة المرور")
+        with st.form(key="forgot_password_form_key"):
+            email = st.text_input("أدخل بريدك الإلكتروني لتلقي رابط إعادة تعيين كلمة المرور")
+            submit_button = st.form_submit_button("إرسال رابط إعادة التعيين")
+            if submit_button:
+                if email:
+                    reset_password(email)
+                else:
+                    st.warning("الرجاء إدخال بريدك الإلكتروني.")
 
 def show_home_page():
     st.title("Welcome to the Smart Diabetes Assistent")
@@ -222,7 +268,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "Nn1122334455"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
