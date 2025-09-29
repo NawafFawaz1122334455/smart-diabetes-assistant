@@ -62,20 +62,32 @@ def signup_user(email, password):
         return False
 
 def login_user(email, password):
-    # Log in user
+    # Log in user (Modified to enforce OTP after password verification)
     if not supabase: return
     try:
+        # 1. Attempt standard password sign-in to verify email and password
         response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        
         if response.user:
-            st.session_state['user'] = response.user
-            st.session_state['page'] = 'Home'
-            st.success("Login successful!")
+            # Password is correct. We prevent the user from logging in directly.
+            
+            # 2. Immediately sign the user out to enforce the OTP step for final login
+            supabase.auth.sign_out() 
+            st.session_state['user'] = None # Clear session state user
+            
+            # 3. Trigger OTP flow
+            st.success("Password verified! Sending One-Time Password (OTP) to your email...")
+            send_otp(email)
+            
+            # Rerun the app to switch to the OTP verification form instantly
+            st.experimental_rerun()
             return True
         else:
+            # Password or email was incorrect
             st.error("Incorrect email or password.")
             return False
     except Exception as e:
-        st.error(f"Error during login: {e}")
+        st.error(f"Error during login verification: {e}")
         return False
 
 def reset_password(email):
@@ -97,7 +109,9 @@ def send_otp(email):
         supabase.auth.sign_in_with_otp({"email": email})
         st.session_state['otp_sent'] = True
         st.session_state['user_email'] = email
-        st.success("OTP code sent to your email. Please check your inbox.")
+        # NOTE: The success message here is redundant if called immediately after password verification, 
+        # but kept for standalone send_otp (e.g., resend). 
+        # st.success("OTP code sent to your email. Please check your inbox.")
     except Exception as e:
         st.error(f"Error sending OTP code: {e}")
 
@@ -218,17 +232,49 @@ def show_auth_page():
     # Use tabs to separate authentication flows (RESTORED)
     tab1, tab2 = st.tabs(["Password Flow (Sign Up/In/Reset)", "One-Time Password (OTP) Flow"])
 
-    with tab1: # Password flow
-        st.subheader("Password Authentication")
-        auth_mode = st.radio("Select Mode", ["Login", "Register", "Forgot Password?"], key="password_auth_mode")
+    # If OTP is sent, we should bypass the password flow forms and jump to OTP verification form.
+    # This ensures the user is forced to verify the OTP after entering the correct password.
+    current_otp_email = st.session_state.get('user_email', "")
+    is_otp_sent = st.session_state.get('otp_sent', False)
+    
+    if is_otp_sent:
+        # Show ONLY OTP verification form if a code has been sent
+        with st.container():
+            st.subheader("One-Time Password (OTP) Verification")
+            with st.form(key="verify_otp_form_key_main"):
+                st.info(f"A code has been sent to **{current_otp_email}**. Please enter it below to complete your login.")
+                token = st.text_input("Enter the OTP code from your email", key="otp_token_input_main")
+                col_verify, col_resend = st.columns(2)
+                
+                with col_verify:
+                    verify_button = st.form_submit_button("Verify Code")
+                
+                with col_resend:
+                    if st.form_submit_button("Cancel / Try Different Email"):
+                        st.session_state['otp_sent'] = False
+                        st.session_state['user_email'] = ""
+                        st.experimental_rerun() 
 
-        if auth_mode == "Login":
+                if verify_button and token:
+                    verify_otp(current_otp_email, token)
+                elif verify_button:
+                    st.warning("Please enter the OTP code.")
+        return # Exit the function after showing the main verification form
+
+    # If OTP is NOT sent, show the tabs normally
+    with tab1: # Password flow (Only login triggers OTP)
+        st.subheader("Password Authentication")
+        auth_mode = st.radio("Select Mode", ["Login (Email & Password Required)", "Register", "Forgot Password?"], key="password_auth_mode")
+
+        if auth_mode == "Login (Email & Password Required)":
+            st.info("Note: Successful login requires both correct password AND subsequent OTP verification.")
             with st.form(key="login_form_key"):
                 email = st.text_input("Email")
                 password = st.text_input("Password", type="password")
                 submit_button = st.form_submit_button("Login")
                 if submit_button and email and password:
-                    login_user(email, password)
+                    # This function now verifies the password, signs out temporarily, and triggers send_otp
+                    login_user(email, password) 
                 elif submit_button:
                     st.warning("Please enter both email and password.")
 
@@ -255,41 +301,21 @@ def show_auth_page():
                 elif submit_button:
                     st.warning("Please enter your email.")
 
-    with tab2: # OTP flow (RESTORED)
-        st.subheader("One-Time Password (OTP) Authentication")
-
-        # Manage OTP state
-        current_otp_email = st.session_state.get('user_email', "")
-        is_otp_sent = st.session_state.get('otp_sent', False)
+    with tab2: # Standalone OTP flow (This is now redundant since password flow enforces it, but keeping for flexibility/resend logic)
+        st.subheader("One-Time Password (OTP) Authentication (Standalone)")
+        st.caption("Use this only if you prefer logging in with just an OTP code (no password verification).")
         
-        if not is_otp_sent:
+        if not is_otp_sent: # Check is_otp_sent again as it might have changed in tab1
             with st.form(key="send_otp_form_key"):
-                email = st.text_input("Enter your email to send OTP code", key="otp_email_input")
-                submit_button = st.form_submit_button("Send Code")
+                email = st.text_input("Enter your email to send OTP code", key="otp_email_input_tab2")
+                submit_button = st.form_submit_button("Send Code (OTP Only)")
                 if submit_button and email:
                     send_otp(email)
                 elif submit_button:
                     st.warning("Please enter your email.")
         else:
-            with st.form(key="verify_otp_form_key"):
-                st.info(f"Code sent to **{current_otp_email}**.")
-                token = st.text_input("Enter the OTP code from your email", key="otp_token_input")
-                col_verify, col_resend = st.columns(2)
-                
-                with col_verify:
-                    verify_button = st.form_submit_button("Verify Code")
-                
-                with col_resend:
-                    # Resend/Different email button
-                    if st.form_submit_button("Resend / Different Email"):
-                        st.session_state['otp_sent'] = False
-                        st.session_state['user_email'] = ""
-                        st.experimental_rerun() # Rerun to show the 'Send Code' form again
-
-                if verify_button and token:
-                    verify_otp(current_otp_email, token)
-                elif verify_button:
-                    st.warning("Please enter the OTP code.")
+            st.info(f"Please use the verification form above, or click 'Cancel / Try Different Email' there.")
+            # We hide the verification form here because the main one is shown above the tabs
 
 
 def show_home_page():
