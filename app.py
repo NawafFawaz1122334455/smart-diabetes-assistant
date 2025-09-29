@@ -199,7 +199,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "Nn1122334455"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -333,3 +333,4 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
+
