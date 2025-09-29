@@ -199,7 +199,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -241,11 +241,14 @@ def show_edit_delete_form():
                 st.image(selected_product['image_url'], width=200)
                 new_name = st.text_input("Product Name", value=selected_product['name'])
                 new_calories = st.number_input("Calories", value=selected_product['calories'], min_value=0)
-                new_sugar = st.number_input("Sugar (g)", value=float(selected_product['sugar']), min_value=0.0)
+                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
+                new_sugar = st.number_input("Sugar (g)", value=float(selected_product.get('sugar', 0.0)), min_value=0.0)
                 # حقل الكربوهيدرات في التعديل
                 new_carbs = st.number_input("Carbohydrates (g)", value=float(selected_product.get('carbs', 0.0)), min_value=0.0)
-                new_protein = st.number_input("Protein (g)", value=float(selected_product['protein']), min_value=0.0)
-                new_fats = st.number_input("Fats (g)", value=float(selected_product['fats']), min_value=0.0)
+                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
+                new_protein = st.number_input("Protein (g)", value=float(selected_product.get('protein', 0.0)), min_value=0.0)
+                # تم التعديل هنا: استخدام .get(key, 0.0) للتعامل مع قيم None في قاعدة البيانات
+                new_fats = st.number_input("Fats (g)", value=float(selected_product.get('fats', 0.0)), min_value=0.0)
                 
                 suitability_options = ("Suitable", "Moderately Suitable", "Not Suitable")
                 try:
@@ -330,4 +333,3 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
-
