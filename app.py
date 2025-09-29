@@ -69,22 +69,39 @@ def logout_user():
     except Exception as e:
         st.error(f"Error during logout: {e}")
 
-# --- دوال إدارة المنتجات ---
+# --- دوال إدارة المنتجات والملفات ---
 
+# دالة رفع الصورة إلى Supabase Storage
 def upload_image_to_storage(image_file):
     if not supabase: return None
     try:
-        file_name = f"products/{uuid.uuid4()}-{image_file.name}"
-        supabase.storage.from_("product-images").upload(file_name, image_file.getvalue())
-        return supabase.storage.from_("product-images").get_public_url(file_name)
+        # إنشاء اسم ملف فريد باستخدام UUID
+        file_extension = image_file.name.split(".")[-1]
+        file_name = f"{uuid.uuid4()}.{file_extension}"
+        bucket_name = "product_images" # تأكد من وجود bucket بهذا الاسم في Supabase Storage
+
+        # قراءة محتوى الملف
+        file_bytes = image_file.read()
+
+        # رفع الملف إلى Supabase Storage
+        supabase.storage.from_(bucket_name).upload(
+            file=file_bytes, 
+            path=file_name, 
+            file_options={"content-type": image_file.type}
+        ).execute()
+
+        # الحصول على الرابط العام للصورة المرفوعة
+        public_url = supabase.storage.from_(bucket_name).get_public_url(file_name)
+        return public_url
     except Exception as e:
-        st.error(f"Failed to upload image: {e}")
+        st.error(f"Error uploading image: {e}")
         return None
 
-def add_new_product(name, calories, sugar, protein, fats, suitability, image_url):
+# تم تحديث الدالة لتشمل 'carbs'
+def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, image_url):
     if not supabase: return
     try:
-        supabase.table("products").insert({"name": name, "calories": calories, "sugar": sugar, "protein": protein, "fats": fats, "suitability": suitability, "image_url": image_url}).execute()
+        supabase.table("products").insert({"name": name, "calories": calories, "sugar": sugar, "protein": protein, "fats": fats, "carbs": carbs, "suitability": suitability, "image_url": image_url}).execute()
         st.success("Product added successfully!")
     except Exception as e:
         st.error(f"Failed to add product: {e}")
@@ -169,6 +186,7 @@ def show_products_page():
                 st.subheader(f"{product['name']} - Suitability: {product['suitability']}")
                 st.image(product['image_url'], width=200)
                 st.write(f"**Calories:** {product['calories']}")
+                st.write(f"**Carbs (g):** {product.get('carbs', 'N/A')}") # عرض الكارب
                 st.write(f"**Sugar:** {product['sugar']}g")
                 st.write(f"**Protein:** {product['protein']}g")
                 st.write(f"**Fats:** {product['fats']}g")
@@ -195,6 +213,7 @@ def show_add_product_form():
         product_name = st.text_input("Product Name")
         calories = st.number_input("Calories", min_value=0)
         sugar = st.number_input("Sugar (g)", min_value=0.0)
+        carbs = st.number_input("Carbohydrates (g)", min_value=0.0) # حقل الكربوهيدرات الجديد
         protein = st.number_input("Protein (g)", min_value=0.0)
         fats = st.number_input("Fats (g)", min_value=0.0)
         suitability = st.selectbox("Is this product suitable for diabetics?", ("Suitable", "Moderately Suitable", "Not Suitable"))
@@ -205,7 +224,8 @@ def show_add_product_form():
                 with st.spinner('Adding product...'):
                     image_url = upload_image_to_storage(uploaded_image)
                     if image_url:
-                        add_new_product(product_name, calories, sugar, protein, fats, suitability, image_url)
+                        # تم تمرير 'carbs' للدالة
+                        add_new_product(product_name, calories, sugar, protein, fats, carbs, suitability, image_url)
             else:
                 st.warning("Please fill in all required fields and upload an image.")
 
@@ -222,6 +242,8 @@ def show_edit_delete_form():
                 new_name = st.text_input("Product Name", value=selected_product['name'])
                 new_calories = st.number_input("Calories", value=selected_product['calories'], min_value=0)
                 new_sugar = st.number_input("Sugar (g)", value=float(selected_product['sugar']), min_value=0.0)
+                # حقل الكربوهيدرات في التعديل
+                new_carbs = st.number_input("Carbohydrates (g)", value=float(selected_product.get('carbs', 0.0)), min_value=0.0)
                 new_protein = st.number_input("Protein (g)", value=float(selected_product['protein']), min_value=0.0)
                 new_fats = st.number_input("Fats (g)", value=float(selected_product['fats']), min_value=0.0)
                 
@@ -247,7 +269,8 @@ def show_edit_delete_form():
                         with st.spinner('Uploading new image...'):
                             image_url_to_update = upload_image_to_storage(new_image)
                     if image_url_to_update:
-                        data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
+                        # تم تحديث البيانات لتشمل 'carbs'
+                        data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
                         if new_image: data_to_update["image_url"] = image_url_to_update
                         update_product_in_db(selected_product['id'], data_to_update)
                 
@@ -307,4 +330,3 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
-
