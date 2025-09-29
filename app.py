@@ -136,6 +136,10 @@ def delete_product_from_db(product_id):
 # --- دوال حاسبة المياه (Water Calculator Functions) ---
 
 def calculate_water_intake(weight_kg, age_years):
+    # تم تحديد قيود أكثر واقعية هنا (للأطفال أو البالغين الأصحاء)
+    if weight_kg <= 15 or age_years <= 5: # الحد الأدنى المنطقي
+        return 0 
+        
     if 18 <= age_years <= 30:
         recommended_ml = weight_kg * 35
     elif 31 <= age_years <= 55:
@@ -146,6 +150,10 @@ def calculate_water_intake(weight_kg, age_years):
 
 # --- دوال صفحة الرياضة ---
 def get_exercise_recommendation(age, weight):
+    # تم تحديد قيود أكثر واقعية هنا
+    if age <= 5 or weight <= 15:
+        return "Please enter a realistic age and weight to get a reliable recommendation. For very young children, physical activity should focus on free play."
+        
     if age < 18:
         return "You are in a great age for physical activity! Focus on playful activities like running, swimming, or team sports."
     elif age <= 40:
@@ -212,7 +220,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -311,29 +319,34 @@ def show_water_calculator_page():
         st.write("- **Monitor Blood Sugar:** Check your blood sugar levels regularly as advised by your doctor.")
         st.write("- **Stay Hydrated:** Drinking enough water helps manage blood sugar levels.")
     with st.form(key="water_form_key"):
-        weight_kg = st.number_input("Your Weight (in kg)", min_value=1.0)
-        age_years = st.number_input("Your Age (in years)", min_value=1)
+        # تم تحديد الحد الأدنى ليكون 15 كجم لواقعية الوزن
+        weight_kg = st.number_input("Your Weight (in kg)", min_value=15.0, value=70.0) 
+        # تم تحديد الحد الأدنى ليكون 5 سنوات لواقعية العمر
+        age_years = st.number_input("Your Age (in years)", min_value=5, value=30) 
         calculate_button = st.form_submit_button("Calculate")
     if calculate_button:
-        if weight_kg and age_years:
+        if weight_kg < 15 or age_years < 5:
+            st.warning("Please enter a realistic weight (e.g., above 15 kg) and age (e.g., above 5 years) to get a valid recommendation.")
+        else:
             recommended_liters = calculate_water_intake(weight_kg, age_years)
             st.success(f"Your recommended daily water intake is **{recommended_liters:.2f} liters**.")
-        else:
-            st.warning("Please enter your weight and age.")
+
 
 def show_exercise_page():
     st.title("Exercise Recommendations")
     st.write("Find a sport that's suitable for you based on your age and weight.")
     st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
     with st.form(key="exercise_form_key"):
-        age = st.number_input("Your Age (in years)", min_value=1)
-        weight = st.number_input("Your Weight (in kg)", min_value=1.0)
+        # تم تحديد الحد الأدنى ليكون 5 سنوات لواقعية العمر
+        age = st.number_input("Your Age (in years)", min_value=5, value=30) 
+        # تم تحديد الحد الأدنى ليكون 15 كجم لواقعية الوزن
+        weight = st.number_input("Your Weight (in kg)", min_value=15.0, value=70.0) 
         get_rec_button = st.form_submit_button("Get Recommendation")
     if get_rec_button:
-        if age and weight:
-            st.info(get_exercise_recommendation(age, weight))
+        if age < 5 or weight < 15:
+            st.warning("Please enter a realistic age (e.g., above 5 years) and weight (e.g., above 15 kg) to get a valid recommendation.")
         else:
-            st.warning("Please enter your age and weight.")
+            st.info(get_exercise_recommendation(age, weight))
     with st.expander("Tips on Exercising with Diabetes"):
         st.write("- **Consult a Doctor:** Always talk to your doctor before starting a new exercise program.")
         st.write("- **Check Blood Sugar:** Check your blood sugar before and after exercise to see how your body responds.")
@@ -350,3 +363,4 @@ if st.session_state['user']:
     page_options[page_name]()
 else:
     show_auth_page()
+
