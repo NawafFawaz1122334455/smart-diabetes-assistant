@@ -4,14 +4,14 @@ import uuid
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# --- دوال الإعداد والتخزين المؤقت (Setup and Caching Functions) ---
+# --- Setup and Caching ---
 
 load_dotenv()
 
-# استخدام st.cache_resource لضمان تهيئة Supabase مرة واحدة فقط
+# Initialize Supabase client once
 @st.cache_resource
 def init_supabase_client() -> Client | None:
-    """تهيئة عميل Supabase وضمان عدم تكرار العملية."""
+    # Fetch environment keys
     supabase_url: str = os.environ.get("SUPABASE_URL")
     supabase_key: str = os.environ.get("SUPABASE_KEY")
 
@@ -19,17 +19,16 @@ def init_supabase_client() -> Client | None:
         st.error("Error: Supabase environment variables are not set. Please check your .env file.")
         return None
     try:
-        # st.cache_resource يضمن أن هذا الكائن لا يُنشأ إلا مرة واحدة
         return create_client(supabase_url, supabase_key)
     except Exception as e:
         st.error(f"Error connecting to Supabase: {e}")
         return None
 
 def init_session_state():
-    """تهيئة متغيرات حالة الجلسة (Session State)."""
+    # Initialize session states
     if 'user' not in st.session_state:
         st.session_state['user'] = None
-    # لم تعد تستخدم للتحقق من OTP بل لتأكيد إرسال رابط إعادة تعيين كلمة المرور
+    # Track OTP sent status (RESTORED)
     if 'otp_sent' not in st.session_state: 
         st.session_state['otp_sent'] = False
     if 'user_email' not in st.session_state:
@@ -37,102 +36,124 @@ def init_session_state():
     if 'page' not in st.session_state:
         st.session_state['page'] = 'Home'
 
-# --- الإعداد الرئيسي للتطبيق ---
+# --- Main App Setup ---
 supabase = init_supabase_client()
 init_session_state()
 
-# --- دوال المصادقة (Auth Functions) ---
+# --- Authentication Functions ---
+
+# Password Flow Functions
 
 def signup_user(email, password):
-    """تسجيل مستخدم جديد باستخدام البريد وكلمة المرور."""
+    # Register new user
     if not supabase: return
     try:
-        # Supabase يتعامل مع تجزئة كلمة المرور (Password Hashing) تلقائياً
         response = supabase.auth.sign_up({"email": email, "password": password})
         if response.user:
             st.session_state['user'] = response.user
             st.session_state['page'] = 'Home'
-            st.success("تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك.")
+            st.success("Registration successful! Please check your email to confirm your account.")
             return True
         else:
-            st.error("فشل التسجيل. قد يكون البريد الإلكتروني موجوداً بالفعل أو كلمة المرور ضعيفة.")
+            st.error("Registration failed. Email might already exist or password is weak.")
             return False
     except Exception as e:
-        st.error(f"خطأ أثناء التسجيل: {e}")
+        st.error(f"Error during registration: {e}")
         return False
 
 def login_user(email, password):
-    """تسجيل دخول المستخدم باستخدام البريد وكلمة المرور."""
+    # Log in user
     if not supabase: return
     try:
         response = supabase.auth.sign_in_with_password({"email": email, "password": password})
         if response.user:
             st.session_state['user'] = response.user
             st.session_state['page'] = 'Home'
-            st.success("تم تسجيل الدخول بنجاح!")
+            st.success("Login successful!")
             return True
         else:
-            st.error("البريد الإلكتروني أو كلمة المرور غير صحيحة.")
+            st.error("Incorrect email or password.")
             return False
     except Exception as e:
-        st.error(f"خطأ أثناء تسجيل الدخول: {e}")
+        st.error(f"Error during login: {e}")
         return False
 
 def reset_password(email):
-    """إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني."""
+    # Send password reset link
     if not supabase: return
     try:
-        # Supabase يرسل رابط لإعادة تعيين كلمة المرور إلى البريد الإلكتروني
         supabase.auth.reset_password_for_email(email)
+        st.session_state['user_email'] = email
+        st.success("A password reset link has been sent to your email. Please check your inbox.")
+    except Exception as e:
+        st.error(f"Error sending password reset link: {e}")
+
+# OTP Flow Functions (RESTORED)
+
+def send_otp(email):
+    # Send OTP code
+    if not supabase: return
+    try:
+        supabase.auth.sign_in_with_otp({"email": email})
         st.session_state['otp_sent'] = True
         st.session_state['user_email'] = email
-        st.success("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.")
+        st.success("OTP code sent to your email. Please check your inbox.")
     except Exception as e:
-        st.error(f"خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور: {e}")
+        st.error(f"Error sending OTP code: {e}")
+
+def verify_otp(email, token):
+    # Verify OTP code
+    if not supabase: return
+    try:
+        response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"}) # Email authentication type
+        if response.user:
+            st.session_state['user'] = response.user
+            # Reset OTP state after verification
+            st.session_state['otp_sent'] = False
+            st.session_state['user_email'] = ""
+            st.session_state['page'] = 'Home'
+            st.success("Verification successful! You are now logged in.")
+        else:
+            st.error("Invalid OTP code. Please try again.")
+    except Exception as e:
+        st.error(f"Error verifying OTP code: {e}")
 
 def logout_user():
+    # Log out user
     if not supabase: return
     try:
         supabase.auth.sign_out()
         st.session_state['user'] = None
-        st.session_state['otp_sent'] = False
-        st.session_state['user_email'] = ""
+        st.session_state['otp_sent'] = False # RESTORED
+        st.session_state['user_email'] = "" # RESTORED
         st.session_state['page'] = 'Home'
-        st.info("تم تسجيل خروجك.")
+        st.info("You have been logged out.")
     except Exception as e:
-        st.error(f"خطأ أثناء تسجيل الخروج: {e}")
+        st.error(f"Error during logout: {e}")
 
-# --- دوال إدارة المنتجات والملفات (Product and File Management Functions) ---
+# --- Product and File Management Functions ---
 
-# دالة رفع الصورة إلى Supabase Storage
 def upload_image_to_storage(image_file):
+    # Upload product image to storage
     if not supabase: return None
     try:
-        # إنشاء اسم ملف فريد باستخدام UUID
         file_extension = image_file.name.split(".")[-1]
         file_name = f"{uuid.uuid4()}.{file_extension}"
-        # **هام:** يجب التأكد من إنشاء bucket بنفس هذا الاسم في لوحة تحكم Supabase Storage
         bucket_name = "product_images" 
-
-        # قراءة محتوى الملف
         file_bytes = image_file.read()
-
-        # رفع الملف إلى Supabase Storage
         supabase.storage.from_(bucket_name).upload(
             file=file_bytes,
             path=file_name,
             file_options={"content-type": image_file.type}
         )
-
-        # الحصول على الرابط العام للصورة المرفوعة
         public_url = supabase.storage.from_(bucket_name).get_public_url(file_name)
         return public_url
     except Exception as e:
         st.error(f"Error uploading image: {e}")
         return None
 
-# تم تحديث الدالة لتشمل 'carbs'
 def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, image_url):
+    # Add new product to the database
     if not supabase: return
     try:
         supabase.table("products").insert({"name": name, "calories": calories, "sugar": sugar, "protein": protein, "fats": fats, "carbs": carbs, "suitability": suitability, "image_url": image_url}).execute()
@@ -141,6 +162,7 @@ def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, im
         st.error(f"Failed to add product: {e}")
 
 def update_product_in_db(product_id, data_to_update):
+    # Update existing product
     if not supabase: return
     try:
         supabase.table("products").update(data_to_update).eq("id", product_id).execute()
@@ -149,6 +171,7 @@ def update_product_in_db(product_id, data_to_update):
         st.error(f"Failed to update product: {e}")
 
 def delete_product_from_db(product_id):
+    # Delete product
     if not supabase: return
     try:
         supabase.table("products").delete().eq("id", product_id).execute()
@@ -156,11 +179,11 @@ def delete_product_from_db(product_id):
     except Exception as e:
         st.error(f"Failed to delete product: {e}")
 
-# --- دوال حاسبة المياه (Water Calculator Functions) ---
+# --- Water Calculator Functions ---
 
 def calculate_water_intake(weight_kg, age_years):
-    # تم تحديد قيود أكثر واقعية هنا (للأطفال أو البالغين الأصحاء)
-    if weight_kg <= 15 or age_years <= 5: # الحد الأدنى المنطقي
+    # Calculate recommended amount
+    if weight_kg <= 15 or age_years <= 5:
         return 0 
         
     if 18 <= age_years <= 30:
@@ -171,73 +194,108 @@ def calculate_water_intake(weight_kg, age_years):
         recommended_ml = weight_kg * 25
     return recommended_ml / 1000
 
-# --- دوال صفحة الرياضة ---
+# --- Exercise Page Functions ---
 def get_exercise_recommendation(age, weight):
-    # تم تحديد قيود أكثر واقعية هنا
+    # Get exercise recommendations
     if age <= 5 or weight <= 15:
-        return "Please enter a realistic age and weight to get a reliable recommendation. For very young children, physical activity should focus on free play."
+        return "Please enter a realistic age and weight for a trusted recommendation. For very young children, physical activities should focus on free play."
         
     if age < 18:
-        return "You are in a great age for physical activity! Focus on playful activities like running, swimming, or team sports."
+        return "You're at a great age for physical activity! Focus on fun activities like running, swimming, or team sports."
     elif age <= 40:
         if weight < 70:
-            return "Good weight for your age! Try to maintain it with activities like running, cycling, and weight training."
+            return "Good weight for your age! Try to maintain it with activities like running, cycling, and strength training."
         else:
-            return "Consider moderate-intensity cardio like brisk walking, jogging, or swimming to manage weight. Consult a trainer for a suitable plan."
+            return "Consider moderate-intensity cardio exercises like brisk walking, jogging, or swimming for weight management. Consult a trainer for a suitable plan."
     else:
-        return "Focus on low-impact exercises like walking, swimming, or yoga. These activities are gentle on joints and great for blood sugar control."
+        return "Focus on low-impact exercises like walking, swimming, or yoga. These are gentle on joints and excellent for blood sugar control."
 
-# --- صفحات التطبيق (App Pages) ---
+# --- App Pages ---
 
 def show_auth_page():
-    st.title("تسجيل الدخول أو التسجيل")
+    st.title("Login and Authentication")
 
-    # اختيار الوضع: تسجيل الدخول، أو التسجيل، أو نسيت كلمة المرور
-    auth_mode = st.radio("اختر الوضع", ["تسجيل الدخول", "التسجيل", "نسيت كلمة المرور؟"], key="auth_mode")
+    # Use tabs to separate authentication flows (RESTORED)
+    tab1, tab2 = st.tabs(["Password Flow (Sign Up/In/Reset)", "One-Time Password (OTP) Flow"])
 
-    if auth_mode == "تسجيل الدخول":
-        st.subheader("تسجيل الدخول باستخدام البريد وكلمة المرور")
-        with st.form(key="login_form_key"):
-            email = st.text_input("البريد الإلكتروني")
-            password = st.text_input("كلمة المرور", type="password")
-            submit_button = st.form_submit_button("تسجيل الدخول")
-            if submit_button:
-                if email and password:
+    with tab1: # Password flow
+        st.subheader("Password Authentication")
+        auth_mode = st.radio("Select Mode", ["Login", "Register", "Forgot Password?"], key="password_auth_mode")
+
+        if auth_mode == "Login":
+            with st.form(key="login_form_key"):
+                email = st.text_input("Email")
+                password = st.text_input("Password", type="password")
+                submit_button = st.form_submit_button("Login")
+                if submit_button and email and password:
                     login_user(email, password)
-                else:
-                    st.warning("الرجاء إدخال كل من البريد الإلكتروني وكلمة المرور.")
+                elif submit_button:
+                    st.warning("Please enter both email and password.")
 
-    elif auth_mode == "التسجيل":
-        st.subheader("إنشاء حساب جديد")
-        with st.form(key="register_form_key"):
-            email = st.text_input("البريد الإلكتروني")
-            password = st.text_input("كلمة المرور (لا تقل عن 6 أحرف)", type="password")
-            confirm_password = st.text_input("تأكيد كلمة المرور", type="password")
-            submit_button = st.form_submit_button("تسجيل")
-            if submit_button:
-                if email and password and confirm_password:
+        elif auth_mode == "Register":
+            with st.form(key="register_form_key"):
+                email = st.text_input("Email")
+                password = st.text_input("Password (min 6 characters)", type="password")
+                confirm_password = st.text_input("Confirm Password", type="password")
+                submit_button = st.form_submit_button("Register")
+                if submit_button and email and password and confirm_password:
                     if password == confirm_password:
                         signup_user(email, password)
                     else:
-                        st.error("كلمتا المرور غير متطابقتين.")
-                else:
-                    st.warning("الرجاء ملء جميع الحقول.")
-    
-    elif auth_mode == "نسيت كلمة المرور؟":
-        st.subheader("إعادة تعيين كلمة المرور")
-        with st.form(key="forgot_password_form_key"):
-            email = st.text_input("أدخل بريدك الإلكتروني لتلقي رابط إعادة تعيين كلمة المرور")
-            submit_button = st.form_submit_button("إرسال رابط إعادة التعيين")
-            if submit_button:
-                if email:
+                        st.error("Passwords do not match.")
+                elif submit_button:
+                    st.warning("Please fill in all fields.")
+        
+        elif auth_mode == "Forgot Password?":
+            with st.form(key="forgot_password_form_key"):
+                email = st.text_input("Enter your email to receive a password reset link")
+                submit_button = st.form_submit_button("Send Reset Link")
+                if submit_button and email:
                     reset_password(email)
-                else:
-                    st.warning("الرجاء إدخال بريدك الإلكتروني.")
+                elif submit_button:
+                    st.warning("Please enter your email.")
+
+    with tab2: # OTP flow (RESTORED)
+        st.subheader("One-Time Password (OTP) Authentication")
+
+        # Manage OTP state
+        current_otp_email = st.session_state.get('user_email', "")
+        is_otp_sent = st.session_state.get('otp_sent', False)
+        
+        if not is_otp_sent:
+            with st.form(key="send_otp_form_key"):
+                email = st.text_input("Enter your email to send OTP code", key="otp_email_input")
+                submit_button = st.form_submit_button("Send Code")
+                if submit_button and email:
+                    send_otp(email)
+                elif submit_button:
+                    st.warning("Please enter your email.")
+        else:
+            with st.form(key="verify_otp_form_key"):
+                st.info(f"Code sent to **{current_otp_email}**.")
+                token = st.text_input("Enter the OTP code from your email", key="otp_token_input")
+                col_verify, col_resend = st.columns(2)
+                
+                with col_verify:
+                    verify_button = st.form_submit_button("Verify Code")
+                
+                with col_resend:
+                    # Resend/Different email button
+                    if st.form_submit_button("Resend / Different Email"):
+                        st.session_state['otp_sent'] = False
+                        st.session_state['user_email'] = ""
+                        st.experimental_rerun() # Rerun to show the 'Send Code' form again
+
+                if verify_button and token:
+                    verify_otp(current_otp_email, token)
+                elif verify_button:
+                    st.warning("Please enter the OTP code.")
+
 
 def show_home_page():
-    st.title("Welcome to the Smart Diabetes Assistent")
-    st.write("This app is designed to help you manage your health.")
-    st.write("Use the navigation menu to explore different features.")
+    st.title("Welcome to the Smart Diabetes Assistant")
+    st.write("This application is designed to help you manage your health and diet.")
+    st.write("Use the navigation menu to explore the different features.")
 
 def show_products_page():
     st.title("Product Catalog")
@@ -253,7 +311,6 @@ def show_products_page():
                 st.subheader(f"{product['name']} - Suitability: {product['suitability']}")
                 st.image(product['image_url'], width=200)
                 st.write(f"**Calories:** {product['calories']}")
-                # استخدام .get للحماية من عدم وجود العمود + افتراض 'N/A' إذا كانت القيمة None
                 carbs_value = product.get('carbs')
                 st.write(f"**Carbs (g):** {carbs_value if carbs_value is not None else 'N/A'}")
                 st.write(f"**Sugar:** {product['sugar']}g")
@@ -268,7 +325,7 @@ def show_products_page():
 def show_admin_page():
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123" # Simple secret code for admin access
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -277,12 +334,12 @@ def show_admin_page():
         st.warning("Incorrect password. Access denied.")
 
 def show_add_product_form():
-    st.subheader("Add a New Product")
+    st.subheader("Add New Product")
     with st.form(key="add_product_form_key"):
         product_name = st.text_input("Product Name")
         calories = st.number_input("Calories", min_value=0)
         sugar = st.number_input("Sugar (g)", min_value=0.0)
-        carbs = st.number_input("Carbohydrates (g)", min_value=0.0) # حقل الكربوهيدرات الجديد
+        carbs = st.number_input("Carbs (g)", min_value=0.0)
         protein = st.number_input("Protein (g)", min_value=0.0)
         fats = st.number_input("Fats (g)", min_value=0.0)
         suitability = st.selectbox("Is this product suitable for diabetics?", ("Suitable", "Moderately Suitable", "Not Suitable"))
@@ -293,7 +350,6 @@ def show_add_product_form():
                 with st.spinner('Adding product...'):
                     image_url = upload_image_to_storage(uploaded_image)
                     if image_url:
-                        # تم تمرير 'carbs' للدالة
                         add_new_product(product_name, calories, sugar, protein, fats, carbs, suitability, image_url)
             else:
                 st.warning("Please fill in all required fields and upload an image.")
@@ -313,13 +369,13 @@ def show_edit_delete_form():
                     new_name = st.text_input("Product Name", value=selected_product['name'])
                     new_calories = st.number_input("Calories", value=selected_product['calories'], min_value=0)
 
-                    # التصحيح النهائي: التحقق من None قبل التحويل إلى float
+                    # Helper function for safe number conversion
                     def safe_number(key, product):
                         value = product.get(key)
                         return float(value) if value is not None else 0.0
 
                     new_sugar = st.number_input("Sugar (g)", value=safe_number('sugar', selected_product), min_value=0.0)
-                    new_carbs = st.number_input("Carbohydrates (g)", value=safe_number('carbs', selected_product), min_value=0.0)
+                    new_carbs = st.number_input("Carbs (g)", value=safe_number('carbs', selected_product), min_value=0.0)
                     new_protein = st.number_input("Protein (g)", value=safe_number('protein', selected_product), min_value=0.0)
                     new_fats = st.number_input("Fats (g)", value=safe_number('fats', selected_product), min_value=0.0)
                     
@@ -327,11 +383,10 @@ def show_edit_delete_form():
                     try:
                         current_suitability_index = suitability_options.index(selected_product['suitability'])
                     except ValueError:
-                        # Handle case where value from DB is not in options
                         current_suitability_index = 0
 
                     new_suitability = st.selectbox("Is this product suitable for diabetics?", suitability_options, index=current_suitability_index)
-                    new_image = st.file_uploader("Upload new image (optional)", type=["png", "jpg", "jpeg"])
+                    new_image = st.file_uploader("Upload New Image (Optional)", type=["png", "jpg", "jpeg"])
 
                     col1, col2 = st.columns(2)
                     with col1:
@@ -345,7 +400,6 @@ def show_edit_delete_form():
                             with st.spinner('Uploading new image...'):
                                 image_url_to_update = upload_image_to_storage(new_image)
                         if image_url_to_update:
-                            # تم تحديث البيانات لتشمل 'carbs'
                             data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": new_suitability}
                             if new_image: data_to_update["image_url"] = image_url_to_update
                             update_product_in_db(selected_product['id'], data_to_update)
@@ -353,7 +407,7 @@ def show_edit_delete_form():
                     if delete_button:
                         delete_product_from_db(selected_product['id'])
         else:
-            st.info("No products available to edit or delete.")
+            st.info("No products available for editing or deletion.")
     except Exception as e:
         st.error(f"Error loading products for edit/delete: {e}")
 
@@ -361,20 +415,18 @@ def show_water_calculator_page():
     st.title("Water Intake Calculator")
     st.write("Calculate your recommended daily water intake based on your weight and age.")
     st.image("https://placehold.co/600x200/ADD8E6/000000?text=Stay+Hydrated")
-    with st.expander("General Tips for Diabetics"):
+    with st.expander("General Advice for Diabetics"):
         st.write("- **Balanced Diet:** Focus on whole foods, fruits, vegetables, and lean proteins.")
         st.write("- **Regular Exercise:** Aim for at least 30 minutes of moderate exercise most days of the week.")
-        st.write("- **Monitor Blood Sugar:** Check your blood sugar levels regularly as advised by your doctor.")
+        st.write("- **Blood Sugar Monitoring:** Check your blood sugar levels regularly as advised by your doctor.")
         st.write("- **Stay Hydrated:** Drinking enough water helps manage blood sugar levels.")
     with st.form(key="water_form_key"):
-        # تم تحديد الحد الأدنى ليكون 15 كجم لواقعية الوزن
-        weight_kg = st.number_input("Your Weight (in kg)", min_value=15.0, value=70.0) 
-        # تم تحديد الحد الأدنى ليكون 5 سنوات لواقعية العمر
-        age_years = st.number_input("Your Age (in years)", min_value=5, value=30) 
+        weight_kg = st.number_input("Your Weight (kg)", min_value=15.0, value=70.0) 
+        age_years = st.number_input("Your Age (years)", min_value=5, value=30) 
         calculate_button = st.form_submit_button("Calculate")
     if calculate_button:
         if weight_kg < 15 or age_years < 5:
-            st.warning("Please enter a realistic weight (e.g., above 15 kg) and age (e.g., above 5 years) to get a valid recommendation.")
+            st.warning("Please enter realistic weight and age (above 15 kg and 5 years) for a valid recommendation.")
         else:
             recommended_liters = calculate_water_intake(weight_kg, age_years)
             st.success(f"Your recommended daily water intake is **{recommended_liters:.2f} liters**.")
@@ -382,32 +434,54 @@ def show_water_calculator_page():
 
 def show_exercise_page():
     st.title("Exercise Recommendations")
-    st.write("Find a sport that's suitable for you based on your age and weight.")
+    st.write("Find a suitable exercise based on your age and weight.")
     st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
     with st.form(key="exercise_form_key"):
-        # تم تحديد الحد الأدنى ليكون 5 سنوات لواقعية العمر
-        age = st.number_input("Your Age (in years)", min_value=5, value=30) 
-        # تم تحديد الحد الأدنى ليكون 15 كجم لواقعية الوزن
-        weight = st.number_input("Your Weight (in kg)", min_value=15.0, value=70.0) 
+        age = st.number_input("Your Age (years)", min_value=5, value=30) 
+        weight = st.number_input("Your Weight (kg)", min_value=15.0, value=70.0) 
         get_rec_button = st.form_submit_button("Get Recommendation")
     if get_rec_button:
         if age < 5 or weight < 15:
-            st.warning("Please enter a realistic age (e.g., above 5 years) and weight (e.g., above 15 kg) to get a valid recommendation.")
+            st.warning("Please enter realistic weight and age (above 5 years and 15 kg) for a valid recommendation.")
         else:
             st.info(get_exercise_recommendation(age, weight))
-    with st.expander("Tips on Exercising with Diabetes"):
-        st.write("- **Consult a Doctor:** Always talk to your doctor before starting a new exercise program.")
-        st.write("- **Check Blood Sugar:** Check your blood sugar before and after exercise to see how your body responds.")
-        st.write("- **Stay Hydrated:** Drink plenty of water before, during, and after your workout.")
-        st.write("- **Carry a Snack:** Keep a quick source of glucose with you in case of a low blood sugar episode.")
+    with st.expander("Tips for Exercising with Diabetes"):
+        st.write("- **Consult a Doctor:** Always talk to your doctor before starting any new exercise program.")
+        st.write("- **Check Blood Sugar:** Check your blood sugar level before and after exercise to see how your body responds.")
+        st.write("- **Stay Hydrated:** Drink plenty of water before, during, and after exercise.")
+        st.write("- **Carry a Snack:** Keep a quick source of glucose with you in case of a sudden drop in blood sugar.")
 
-# --- منطق التنقل الرئيسي ---
+# --- Main Navigation Logic ---
 st.sidebar.title("Navigation")
 if st.session_state['user']:
     st.sidebar.button("Logout", on_click=logout_user)
     page_options = {"Home": show_home_page, "Products": show_products_page, "Admin": show_admin_page, "Water Calculator": show_water_calculator_page, "Exercise": show_exercise_page}
-    page_name = st.sidebar.radio("Go to", list(page_options.keys()), index=list(page_options.keys()).index(st.session_state['page']))
-    st.session_state['page'] = page_name
-    page_options[page_name]()
+    
+    # Map internal keys to display names
+    translated_options = {
+        "Home": "Home", 
+        "Products": "Products", 
+        "Admin": "Admin", 
+        "Water Calculator": "Water Calculator", 
+        "Exercise": "Exercise"
+    }
+
+    # Find the current key
+    current_key = st.session_state['page']
+    translated_keys = list(translated_options.values())
+    
+    # Determine initial index
+    initial_index = 0
+    if current_key in translated_options:
+        initial_index = translated_keys.index(translated_options[current_key])
+
+    # Display English names in the radio button
+    selected_translated_name = st.sidebar.radio("Go to", translated_keys, index=initial_index)
+    
+    # Map the display name back to the internal key
+    selected_key = next(key for key, value in translated_options.items() if value == selected_translated_name)
+
+    st.session_state['page'] = selected_key
+    page_options[selected_key]()
 else:
     show_auth_page()
