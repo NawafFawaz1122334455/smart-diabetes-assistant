@@ -38,13 +38,15 @@ init_session_state()
 # --- وظائف المصادقة ---
 
 def signup_user(email, password):
+    # وظيفة تسجيل مستخدم جديد
     if not supabase: return
     try:
         response = supabase.auth.sign_up({"email": email, "password": password})
         if response.user:
-            st.session_state['user'] = response.user
-            st.session_state['page'] = 'Home'
-            st.success("Registration successful! Please check your email to confirm your account.")
+            # تمت إزالة تسجيل الدخول التلقائي. يجب على المستخدم الآن استخدام خانة 'Login'
+            # st.session_state['user'] = response.user 
+            # st.session_state['page'] = 'Home'
+            st.success("Registration successful! Please use the 'Login' option to proceed with verification and access the application.")
             return True
         else:
             st.error("Registration failed. Email might already exist or password is weak.")
@@ -54,6 +56,7 @@ def signup_user(email, password):
         return False
 
 def login_user(email, password):
+    # وظيفة تسجيل الدخول (تبدأ بخطوة التحقق من كلمة المرور تليها OTP)
     if not supabase: return
     try:
         # 1. Verify password
@@ -74,6 +77,7 @@ def login_user(email, password):
         return False
 
 def reset_password(email):
+    # وظيفة إعادة تعيين كلمة المرور
     if not supabase: return
     try:
         supabase.auth.reset_password_for_email(email)
@@ -83,6 +87,7 @@ def reset_password(email):
         st.error(f"Error sending password reset link: {e}")
 
 def send_otp(email):
+    # وظيفة إرسال رمز OTP
     if not supabase: return
     try:
         supabase.auth.sign_in_with_otp({"email": email})
@@ -93,6 +98,7 @@ def send_otp(email):
         st.error(f"Error sending OTP code: {e}")
 
 def verify_otp(email, token):
+    # وظيفة التحقق من رمز OTP
     if not supabase: return
     try:
         response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
@@ -108,6 +114,7 @@ def verify_otp(email, token):
         st.error(f"Error verifying OTP code: {e}")
 
 def logout_user():
+    # وظيفة تسجيل الخروج
     if not supabase: return
     try:
         supabase.auth.sign_out()
@@ -122,6 +129,7 @@ def logout_user():
 # --- وظائف إدارة المنتجات والملفات ---
 
 def upload_image_to_storage(image_file):
+    # وظيفة رفع صورة إلى مساحة التخزين
     if not supabase: return None
     try:
         file_extension = image_file.name.split(".")[-1]
@@ -140,6 +148,7 @@ def upload_image_to_storage(image_file):
         return None
 
 def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, image_url):
+    # وظيفة إضافة منتج جديد إلى قاعدة البيانات
     if not supabase: return
     try:
         supabase.table("products").insert({"name": name, "calories": calories, "sugar": sugar, "protein": protein, "fats": fats, "carbs": carbs, "suitability": suitability, "image_url": image_url}).execute()
@@ -148,6 +157,7 @@ def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, im
         st.error(f"Failed to add product: {e}")
 
 def update_product_in_db(product_id, data_to_update):
+    # وظيفة تحديث بيانات منتج
     if not supabase: return
     try:
         supabase.table("products").update(data_to_update).eq("id", product_id).execute()
@@ -156,6 +166,7 @@ def update_product_in_db(product_id, data_to_update):
         st.error(f"Failed to update product: {e}")
 
 def delete_product_from_db(product_id):
+    # وظيفة حذف منتج من قاعدة البيانات
     if not supabase: return
     try:
         supabase.table("products").delete().eq("id", product_id).execute()
@@ -166,6 +177,7 @@ def delete_product_from_db(product_id):
 # --- وظائف مساعدة ---
 
 def calculate_water_intake(weight_kg, age_years):
+    # وظيفة حساب كمية الماء الموصى بها
     if weight_kg <= 15 or age_years <= 5: return 0 
     if 18 <= age_years <= 30: recommended_ml = weight_kg * 35
     elif 31 <= age_years <= 55: recommended_ml = weight_kg * 30
@@ -173,6 +185,7 @@ def calculate_water_intake(weight_kg, age_years):
     return recommended_ml / 1000
 
 def get_exercise_recommendation(age, weight):
+    # وظيفة تقديم توصيات التمارين
     if age <= 5 or weight <= 15:
         return "Please enter a realistic age and weight for a trusted recommendation. For very young children, physical activities should focus on free play."
     if age < 18:
@@ -186,12 +199,14 @@ def get_exercise_recommendation(age, weight):
         return "Focus on low-impact exercises like walking, swimming, or yoga. These are gentle on joints and excellent for blood sugar control."
         
 def safe_number(key, product):
+    # وظيفة تحويل قيمة المنتج إلى رقم عشري آمن
     value = product.get(key)
     return float(value) if value is not None else 0.0
 
 # --- صفحات التطبيق ---
 
 def show_auth_page():
+    # وظيفة عرض صفحة المصادقة
     st.title("Login and Authentication")
 
     current_otp_email = st.session_state.get('user_email', "")
@@ -221,69 +236,55 @@ def show_auth_page():
                     st.warning("Please enter the OTP code.")
         return
 
-    # 2. Show standard authentication flow with tabs
-    tab1, tab2 = st.tabs(["Password Flow (Signup/Login/Reset)", "OTP Flow (Standalone)"])
+    # 2. Show standard authentication flow (Password-based only)
+    st.subheader("Password Authentication")
+    
+    # Note: We enforce the flow: Password -> OTP, so we only need one set of options here.
+    auth_mode = st.radio("Select Mode", ["Login (Email & Password Required)", "Signup", "Forgot Password?"], key="password_auth_mode")
 
-    with tab1:
-        st.subheader("Password Authentication")
-        auth_mode = st.radio("Select Mode", ["Login (Email & Password Required)", "Signup", "Forgot Password?"], key="password_auth_mode")
+    if auth_mode == "Login (Email & Password Required)":
+        st.info("Note: Successful login requires the **correct password** followed by **OTP verification**.")
+        with st.form(key="login_form_key"):
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            submit_button = st.form_submit_button("Login")
+            if submit_button and email and password:
+                login_user(email, password) 
+            elif submit_button:
+                st.warning("Please enter both Email and Password.")
 
-        if auth_mode == "Login (Email & Password Required)":
-            st.info("Note: Successful login requires the **correct password** followed by **OTP verification**.")
-            with st.form(key="login_form_key"):
-                email = st.text_input("Email")
-                password = st.text_input("Password", type="password")
-                submit_button = st.form_submit_button("Login")
-                if submit_button and email and password:
-                    login_user(email, password) 
-                elif submit_button:
-                    st.warning("Please enter both Email and Password.")
-
-        elif auth_mode == "Signup":
-            with st.form(key="register_form_key"):
-                email = st.text_input("Email")
-                password = st.text_input("Password (Min 6 Characters)", type="password")
-                confirm_password = st.text_input("Confirm Password", type="password")
-                submit_button = st.form_submit_button("Signup")
-                if submit_button and email and password and confirm_password:
-                    if password == confirm_password:
-                        signup_user(email, password)
-                    else:
-                        st.error("Passwords do not match.")
-                elif submit_button:
-                    st.warning("Please fill in all fields.")
-        
-        elif auth_mode == "Forgot Password?":
-            with st.form(key="forgot_password_form_key"):
-                email = st.text_input("Enter your Email to receive a password reset link")
-                submit_button = st.form_submit_button("Send Reset Link")
-                if submit_button and email:
-                    reset_password(email)
-                elif submit_button:
-                    st.warning("Please enter your Email.")
-
-    with tab2:
-        st.subheader("OTP Authentication (Standalone)")
-        st.caption("Use this if you prefer to log in using only OTP (without password).")
-        
-        if not is_otp_sent:
-            with st.form(key="send_otp_form_key"):
-                email = st.text_input("Enter your Email to send OTP code", key="otp_email_input_tab2")
-                submit_button = st.form_submit_button("Send Code (OTP Only)")
-                if submit_button and email:
-                    send_otp(email)
-                elif submit_button:
-                    st.warning("Please enter your Email.")
-        else:
-            st.info(f"Please use the verification form above to confirm the code sent to **{current_otp_email}**.")
+    elif auth_mode == "Signup":
+        with st.form(key="register_form_key"):
+            email = st.text_input("Email")
+            password = st.text_input("Password (Min 6 Characters)", type="password")
+            confirm_password = st.text_input("Confirm Password", type="password")
+            submit_button = st.form_submit_button("Signup")
+            if submit_button and email and password and confirm_password:
+                if password == confirm_password:
+                    signup_user(email, password)
+                else:
+                    st.error("Passwords do not match.")
+            elif submit_button:
+                st.warning("Please fill in all fields.")
+    
+    elif auth_mode == "Forgot Password?":
+        with st.form(key="forgot_password_form_key"):
+            email = st.text_input("Enter your Email to receive a password reset link")
+            submit_button = st.form_submit_button("Send Reset Link")
+            if submit_button and email:
+                reset_password(email)
+            elif submit_button:
+                st.warning("Please enter your Email.")
 
 
 def show_home_page():
+    # وظيفة عرض الصفحة الرئيسية
     st.title("Welcome to the Smart Diabetes Assistant")
     st.write("This application is designed to help you manage your health and diet.")
     st.write("Use the navigation menu to explore the different features.")
 
 def show_products_page():
+    # وظيفة عرض كتالوج المنتجات
     st.title("Product Catalog")
     st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Foods")
     search_query = st.text_input("Search for a product...")
@@ -309,6 +310,7 @@ def show_products_page():
         st.error(f"Error fetching products: {e}")
 
 def show_admin_page():
+    # وظيفة عرض لوحة تحكم المسؤول
     st.title("Admin Dashboard")
     admin_password = st.text_input("Enter Admin Password", type="password")
     SECRET_CODE = "Nn1122334455"
@@ -320,6 +322,7 @@ def show_admin_page():
         st.warning("Incorrect password. Access denied.")
 
 def show_add_product_form():
+    # وظيفة عرض نموذج إضافة منتج
     st.subheader("Add New Product")
     with st.form(key="add_product_form_key"):
         product_name = st.text_input("Product Name")
@@ -341,6 +344,7 @@ def show_add_product_form():
                 st.warning("Please fill in all required fields and upload an image.")
 
 def show_edit_delete_form():
+    # وظيفة عرض نموذج تعديل/حذف منتج
     st.subheader("Edit or Delete Existing Product")
     try:
         products = supabase.table("products").select("*").execute().data
@@ -388,6 +392,7 @@ def show_edit_delete_form():
         st.error(f"Error loading products for edit/delete: {e}")
 
 def show_water_calculator_page():
+    # وظيفة عرض صفحة حاسبة الماء
     st.title("Water Intake Calculator")
     st.write("Calculate your recommended daily water intake based on your weight and age.")
     st.image("https://placehold.co/600x200/ADD8E6/000000?text=Stay+Hydrated")
@@ -409,6 +414,7 @@ def show_water_calculator_page():
 
 
 def show_exercise_page():
+    # وظيفة عرض توصيات التمارين
     st.title("Exercise Recommendations")
     st.write("Find a suitable exercise based on your age and weight.")
     st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
@@ -430,6 +436,7 @@ def show_exercise_page():
 # --- منطق التنقل ---
 
 def setup_navigation():
+    # وظيفة إعداد شريط التنقل الجانبي
     # Define mapping from internal key (English) to function and English display name
     page_map = {
         "Home": {"func": show_home_page, "name": "Home Page"}, 
