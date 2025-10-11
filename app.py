@@ -486,8 +486,8 @@ def show_auth_page():
 def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
     st.title(get_text("welcome_title"))
-    
-  def show_home_page():
+       
+def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
     st.title(get_text("welcome_title"))
     
@@ -754,6 +754,7 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
 
