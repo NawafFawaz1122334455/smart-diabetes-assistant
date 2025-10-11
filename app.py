@@ -5,7 +5,8 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # --- تعريف نصوص التطبيق لخاصية الترجمة ---
-# (تم حذف القاموس اختصاراً، لكنه موجود في ملفك الأصلي)
+# هذا القاموس يحتوي على جميع النصوص الرئيسية في التطبيق باللغتين
+# (يمكنك إضافة لغات أخرى لاحقًا بسهولة)
 TEXTS = {
     "ar": {
         # Navigation & Page Titles
@@ -190,6 +191,7 @@ TEXTS = {
         "suitability_options": ["Suitable", "Moderately Suitable", "Not Suitable"],
     }
 }
+
 # --- دالة مساعدة للحصول على النص المترجم ---
 def get_text(key):
     # افتراض اللغة العربية (ar) كخيار افتراضي
@@ -199,7 +201,7 @@ def get_text(key):
 # --- إعدادات الصفحة (يجب أن يكون هذا أول استدعاء لـ Streamlit) ---
 st.set_page_config(
     page_title="SMART DA .COM", 
-    page_icon="🩺", 
+    page_icon="🩺", # الإيموجي الطبي
     layout="wide",       
     initial_sidebar_state="expanded"
 )
@@ -409,7 +411,7 @@ def safe_number(key, product):
     value = product.get(key)
     return float(value) if value is not None else 0.0
 
-# --- صفحات التطبيق (تم تحديث دالة الصفحة الرئيسية) ---
+# --- صفحات التطبيق (تم تحديثها لدعم الترجمة) ---
 
 def show_auth_page():
     # وظيفة عرض صفحة المصادقة
@@ -483,15 +485,12 @@ def show_auth_page():
                 st.warning("Please enter your Email.")
 
 
+def show_home_page():
+    # وظيفة عرض الصفحة الرئيسية
+    st.title(get_text("welcome_title"))
+    st.write(get_text("welcome_msg_1"))
+    st.write(get_text("welcome_msg_2"))
 
-       
-# يجب أن تكون جملة import في بداية ملف app.py بالكامل، خارج أي دالة
-
-
-    
-   
-    # قسم تشجيعي
-    st.info("💪 ابدأ يومك بنشاط، واشرب كمية كافية من الماء، وتناول طعامًا صحيًا!")
 def show_products_page():
     # وظيفة عرض كتالوج المنتجات
     st.title(get_text("products_title"))
@@ -742,24 +741,3 @@ else:
         st.rerun()
         
     show_auth_page()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
