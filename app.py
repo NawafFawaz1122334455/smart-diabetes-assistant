@@ -489,16 +489,15 @@ def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
     st.title(get_text("welcome_title"))
     
-    # 🌟🌟🌟 الكود الجاهز للنسخ واللصق 🌟🌟🌟
-    image_name = "smartda.jpg" 
+    # 🌟 استخدام رابط صورة عامة وموثوقة 🌟
+    # صورة عامة ذات جودة عالية ومرتبطة بموضوع الصحة أو السكري
+    image_url = "https://images.unsplash.com/photo-1532938911079-1b06ac7ceecf?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     
     try:
-        # استخدام المسار النسبي (اسم الملف فقط)
-        st.image(image_name, width=400) 
-    except Exception:
-        # رسالة تحذير مفيدة إذا فشل التحميل
-        st.warning(f"Image '{image_name}' not found. Please place it in the same directory as this script.")
-    # 🌟🌟🌟 نهاية الكود الجاهز 🌟🌟🌟
+        # عرض الصورة باستخدام الرابط
+        st.image(image_url, width=400, caption="SMART DA: مساعد السكري الذكي") 
+    except Exception as e:
+        st.warning(f"Failed to load image from URL: {e}. Please check your internet connection.")
     
     st.write(get_text("welcome_msg_1"))
     st.write(get_text("welcome_msg_2"))
@@ -752,6 +751,7 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
 
