@@ -487,20 +487,23 @@ def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
     st.title(get_text("welcome_title"))
     
-    # 🌟🌟🌟 التعديل هنا 🌟🌟🌟
-    image_path = ""C:\app pyhone\diabetes_app\smartda.jpg"" 
+  def show_home_page():
+    # وظيفة عرض الصفحة الرئيسية
+    st.title(get_text("welcome_title"))
     
-    # محاولة عرض الصورة بالمسار المطلق
+    # 🌟🌟🌟 الكود الجاهز للنسخ واللصق 🌟🌟🌟
+    image_name = "smartda.jpg" 
+    
     try:
-        st.image(image_path, width=400) # تم تحديد العرض بـ 400 بكسل
-    except Exception as e:
-        # إذا فشل العرض (بسبب قيود Streamlit على المسارات المطلقة)
-        st.warning("⚠️ Image could not be loaded from the absolute path. Please place 'smartda.jpg' in the same folder as your Python file and use `st.image('smartda.jpg', width=400)`.")
-    # 🌟🌟🌟 نهاية التعديل 🌟🌟🌟
+        # استخدام المسار النسبي (اسم الملف فقط)
+        st.image(image_name, width=400) 
+    except Exception:
+        # رسالة تحذير مفيدة إذا فشل التحميل
+        st.warning(f"Image '{image_name}' not found. Please place it in the same directory as this script.")
+    # 🌟🌟🌟 نهاية الكود الجاهز 🌟🌟🌟
     
     st.write(get_text("welcome_msg_1"))
     st.write(get_text("welcome_msg_2"))
-
 def show_products_page():
     # وظيفة عرض كتالوج المنتجات
     st.title(get_text("products_title"))
@@ -751,6 +754,7 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
 
