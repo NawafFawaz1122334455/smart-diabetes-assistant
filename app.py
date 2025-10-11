@@ -483,9 +483,7 @@ def show_auth_page():
                 st.warning("Please enter your Email.")
 
 
-def show_home_page():
-    # وظيفة عرض الصفحة الرئيسية
-    st.title(get_text("welcome_title"))
+
        
 def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
@@ -754,6 +752,7 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
 
