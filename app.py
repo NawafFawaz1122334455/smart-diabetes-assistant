@@ -492,7 +492,7 @@ def show_home_page():
     st.title(get_text("welcome_title"))
     
     # 🌟🌟🌟 الكود الجاهز للنسخ واللصق 🌟🌟🌟
-    image_name = "smartda.JPG" 
+    image_name = "C:\app pyhone\diabetes_app\smartda.jpg" 
     
     try:
         # استخدام المسار النسبي (اسم الملف فقط)
@@ -754,6 +754,7 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
 
