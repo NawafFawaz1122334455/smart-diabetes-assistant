@@ -4,6 +4,15 @@ import uuid
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
+# --- إعدادات الصفحة (يجب أن يكون هذا أول استدعاء لـ Streamlit) ---
+st.set_page_config(
+    page_title="SMART DA", # اسم التطبيق الذي يظهر في علامة تبويب المتصفح
+    page_icon="C:\\smartda.jpg", # المسار الجديد لملف الشعار
+    layout="wide",       
+    initial_sidebar_state="expanded"
+)
+# -----------------------------------------------------------------
+
 # --- الإعداد والتخزين المؤقت ---
 
 load_dotenv()
@@ -471,3 +480,4 @@ if st.session_state['user']:
     setup_navigation()
 else:
     show_auth_page()
+
