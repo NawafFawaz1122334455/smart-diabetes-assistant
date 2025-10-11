@@ -488,7 +488,7 @@ def show_home_page():
     st.title(get_text("welcome_title"))
     
     # 🌟🌟🌟 التعديل هنا 🌟🌟🌟
-    image_path = "smartda.jpg" 
+    image_path = ""C:\app pyhone\diabetes_app\smartda.jpg"" 
     
     # محاولة عرض الصورة بالمسار المطلق
     try:
@@ -751,5 +751,6 @@ else:
         st.rerun()
         
     show_auth_page()
+
 
 
