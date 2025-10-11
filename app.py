@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 # --- إعدادات الصفحة (يجب أن يكون هذا أول استدعاء لـ Streamlit) ---
 st.set_page_config(
-    page_title="SMART DA", # اسم التطبيق الذي يظهر في علامة تبويب المتصفح
-    page_icon="C:\\app pyhone\\smartda.jpg", # المسار الجديد لملف الشعار
+    page_title="SMART DA .COM", # الاسم الجديد في شريط المتصفح
+    page_icon="🩺", # تم تغيير الشعار إلى إيموجي طبي (لتأكيد عمل الدالة)
     layout="wide",       
     initial_sidebar_state="expanded"
 )
@@ -480,6 +480,7 @@ if st.session_state['user']:
     setup_navigation()
 else:
     show_auth_page()
+
 
 
 
