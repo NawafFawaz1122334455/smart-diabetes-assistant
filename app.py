@@ -5,6 +5,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # --- تعريف نصوص التطبيق لخاصية الترجمة ---
+# (تم حذف القاموس اختصاراً، لكنه موجود في ملفك الأصلي)
 TEXTS = {
     "ar": {
         # Navigation & Page Titles
@@ -408,7 +409,7 @@ def safe_number(key, product):
     value = product.get(key)
     return float(value) if value is not None else 0.0
 
-# --- صفحات التطبيق ---
+# --- صفحات التطبيق (تم تحديث دالة الصفحة الرئيسية) ---
 
 def show_auth_page():
     # وظيفة عرض صفحة المصادقة
@@ -486,13 +487,16 @@ def show_home_page():
     # وظيفة عرض الصفحة الرئيسية
     st.title(get_text("welcome_title"))
     
-    # يجب أن تكون الصورة "smartda.jpg" في نفس مجلد ملف البايثون
-    image_name = "smartda.jpg" 
+    # 🌟🌟🌟 التعديل هنا 🌟🌟🌟
+    image_path = "C:\\app pyhone\\smartda.jpg" 
+    
+    # محاولة عرض الصورة بالمسار المطلق
     try:
-        st.image(image_name, width=400) 
-    except Exception:
-        # رسالة تحذير مفيدة إذا لم يتم العثور على الصورة
-        st.warning(f"Image '{image_name}' not found. Please place it in the same directory as this script.")
+        st.image(image_path, width=400) # تم تحديد العرض بـ 400 بكسل
+    except Exception as e:
+        # إذا فشل العرض (بسبب قيود Streamlit على المسارات المطلقة)
+        st.warning("⚠️ Image could not be loaded from the absolute path. Please place 'smartda.jpg' in the same folder as your Python file and use `st.image('smartda.jpg', width=400)`.")
+    # 🌟🌟🌟 نهاية التعديل 🌟🌟🌟
     
     st.write(get_text("welcome_msg_1"))
     st.write(get_text("welcome_msg_2"))
@@ -674,7 +678,7 @@ def setup_navigation():
     
     # محدد اللغة (Language Selector)
     lang_map = {"العربية": "ar", "English": "en"}
-    current_lang_display = "العربية" if st.session_state.get('language') == 'ar' else "English"
+    current_lang_display = "العربية" if st.session_state['language'] == 'ar' else "English"
     
     st.sidebar.subheader(get_text("lang_selector"))
     selected_lang_display = st.sidebar.radio(
@@ -685,7 +689,7 @@ def setup_navigation():
     )
     
     # تحديث حالة الجلسة باللغة الجديدة وإعادة تشغيل التطبيق لعرض التغييرات
-    if lang_map[selected_lang_display] != st.session_state.get('language'):
+    if lang_map[selected_lang_display] != st.session_state['language']:
         st.session_state['language'] = lang_map[selected_lang_display]
         st.rerun()
 
@@ -706,7 +710,7 @@ def setup_navigation():
     st.sidebar.button(get_text("logout"), on_click=logout_user)
     
     # Get current page name for radio default selection
-    current_page_name = page_map_keys.get(st.session_state.get('page'), page_map_keys["Home"])
+    current_page_name = page_map_keys.get(st.session_state['page'], page_map_keys["Home"])
     initial_index = display_names.index(current_page_name) if current_page_name in display_names else 0
 
     selected_display_name = st.sidebar.radio(get_text("navigation"), display_names, index=initial_index)
@@ -727,13 +731,12 @@ def setup_navigation():
 
 # --- تنفيذ التطبيق الرئيسي ---
 
-# 🌟🌟🌟 التعديل الحاسم لتفادي KeyError 🌟🌟🌟
-if st.session_state.get('user'):
+if st.session_state['user']:
     setup_navigation()
 else:
     # يجب إظهار محدد اللغة في صفحة المصادقة أيضًا
     lang_map = {"العربية": "ar", "English": "en"}
-    current_lang_display = "العربية" if st.session_state.get('language') == 'ar' else "English"
+    current_lang_display = "العربية" if st.session_state['language'] == 'ar' else "English"
     
     st.sidebar.subheader(get_text("lang_selector"))
     selected_lang_display = st.sidebar.radio(
@@ -743,8 +746,9 @@ else:
         key="lang_radio_auth"
     )
     
-    if lang_map[selected_lang_display] != st.session_state.get('language'):
+    if lang_map[selected_lang_display] != st.session_state['language']:
         st.session_state['language'] = lang_map[selected_lang_display]
         st.rerun()
         
     show_auth_page()
+
