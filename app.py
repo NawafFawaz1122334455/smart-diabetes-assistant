@@ -4,302 +4,257 @@ import uuid
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# --- تعريف نصوص التطبيق لخاصية الترجمة ---
-# هذا القاموس يحتوي على جميع النصوص الرئيسية في التطبيق باللغتين
-# (يمكنك إضافة لغات أخرى لاحقًا بسهولة)
-TEXTS = {
-    "ar": {
-        # Navigation & Page Titles
-        "home_page": "الصفحة الرئيسية",
-        "products_catalog": "كتالوج المنتجات",
-        "admin_dashboard": "لوحة تحكم المسؤول",
-        "water_calculator": "حاسبة الماء",
-        "exercise_recs": "توصيات التمارين",
-        "navigation": "التنقل",
-        "logout": "تسجيل الخروج",
-        "lang_selector": "اختر اللغة",
-
-        # Home Page
-        "welcome_title": "مرحباً بك في مساعد السكري الذكي",
-        "welcome_msg_1": "هذا التطبيق مصمم لمساعدتك في إدارة صحتك ونظامك الغذائي.",
-        "welcome_msg_2": "استخدم قائمة التنقل لاستكشاف الميزات المختلفة.",
-
-        # Auth Page
-        "auth_title": "تسجيل الدخول والمصادقة",
-        "pass_auth_title": "مصادقة كلمة المرور",
-        "mode_login": "تسجيل الدخول (يتطلب إيميل وكلمة مرور)",
-        "mode_signup": "التسجيل",
-        "mode_forgot": "نسيت كلمة المرور؟",
-        "login_info": "ملاحظة: يتطلب تسجيل الدخول الناجح **كلمة المرور الصحيحة** يتبعها **التحقق برمز OTP**.",
-        "email": "البريد الإلكتروني",
-        "password": "كلمة المرور",
-        "confirm_password": "تأكيد كلمة المرور",
-        "login_btn": "تسجيل الدخول",
-        "signup_btn": "التسجيل",
-        "signup_success": "تم التسجيل بنجاح! الرجاء استخدام خيار 'تسجيل الدخول' للمتابعة والتحقق والوصول إلى التطبيق.",
-        "otp_verification": "التحقق برمز (OTP)",
-        "otp_sent_info": "تم إرسال رمز OTP إلى **{}**. الرجاء إدخاله أدناه لإكمال تسجيل الدخول.",
-        "enter_otp": "أدخل رمز OTP من بريدك الإلكتروني",
-        "verify_btn": "التحقق من الرمز",
-        "cancel_login": "إلغاء تسجيل الدخول",
-        "send_reset_link": "إرسال رابط إعادة التعيين",
-        "enter_reset_email": "أدخل بريدك الإلكتروني لاستلام رابط إعادة تعيين كلمة المرور",
-        
-        # Products Page
-        "products_title": "كتالوج المنتجات",
-        "products_placeholder": "Healthy Foods",
-        "search_product": "ابحث عن منتج...",
-        "suitability": "ملائمة المنتج",
-        "calories": "السعرات الحرارية",
-        "carbs": "الكربوهيدرات (غ)",
-        "sugar": "السكر (غ)",
-        "protein": "البروتين (غ)",
-        "fats": "الدهون (غ)",
-        "not_available": "غير متاح",
-        "no_products": "لم يتم العثور على منتجات.",
-        
-        # Water Calculator
-        "water_calc_title": "حاسبة استهلاك الماء",
-        "water_calc_msg": "احسب كمية الماء اليومية الموصى بها بناءً على وزنك وعمرك.",
-        "water_placeholder": "Stay Hydrated",
-        "general_advice": "نصائح عامة لمرضى السكري",
-        "advice_1": "- **نظام غذائي متوازن:** ركز على الأطعمة الكاملة والخضروات والبروتينات الخالية من الدهون.",
-        "advice_2": "- **تمارين منتظمة:** استهدف 30 دقيقة على الأقل من التمارين المعتدلة معظم أيام الأسبوع.",
-        "advice_3": "- **مراقبة السكر:** افحص مستويات السكر في الدم بانتظام حسب إرشادات طبيبك.",
-        "advice_4": "- **حافظ على رطوبتك:** شرب كمية كافية من الماء يساعد في إدارة مستويات السكر في الدم.",
-        "weight_kg": "وزنك (كجم)",
-        "age_years": "عمرك (سنوات)",
-        "calculate_btn": "احسب",
-        "reliable_warning": "الرجاء إدخال وزن وعمر واقعيين (أكثر من 15 كجم و 5 سنوات) للحصول على توصية موثوقة.",
-        "recommended_intake": "الكمية الموصى بها من الماء يوميًا هي **{:.2f} لتر**.",
-
-        # Exercise Recommendations
-        "exercise_title": "توصيات التمارين",
-        "exercise_msg": "ابحث عن تمرين مناسب بناءً على عمرك ووزنك.",
-        "exercise_placeholder": "Exercise and Health",
-        "get_rec_btn": "احصل على توصية",
-        "tips_exercise": "نصائح لممارسة الرياضة مع مرض السكري",
-        "tip_1": "- **استشر الطبيب:** تحدث دائمًا مع طبيبك قبل البدء بأي برنامج رياضي جديد.",
-        "tip_2": "- **افحص سكر الدم:** اختبر سكر الدم قبل وبعد التمرين لمعرفة كيفية استجابة جسمك.",
-        "tip_3": "- **حافظ على رطوبتك:** اشرب الكثير من الماء قبل وأثناء وبعد التمرين.",
-        "tip_4": "- **احمل وجبة خفيفة:** احتفظ بمصدر جلوكوز سريع المفعول معك في حال حدوث انخفاض مفاجئ في السكر.",
-
-        # Admin Page
-        "admin_title": "لوحة تحكم المسؤول",
-        "admin_password": "أدخل كلمة مرور المسؤول",
-        "admin_denied": "كلمة مرور غير صحيحة. تم رفض الوصول.",
-        "add_product_title": "إضافة منتج جديد",
-        "product_name": "اسم المنتج",
-        "upload_image": "تحميل صورة المنتج",
-        "add_product_btn": "إضافة المنتج",
-        "edit_delete_title": "تعديل أو حذف منتج موجود",
-        "select_product_edit": "اختر منتجًا للتعديل",
-        "update_btn": "تحديث المنتج",
-        "delete_btn": "حذف المنتج",
-        "upload_new_image": "تحميل صورة جديدة (اختياري)",
-        "suitability_options": ["ملائم", "ملائم باعتدال", "غير ملائم"],
+# --- بيانات الترجمة (Translation Data) ---
+TRANSLATIONS = {
+    'ar': {
+        'app_title': "مساعد السكري الذكي",
+        'welcome': "مرحباً بك في مساعد السكري الذكي",
+        'app_purpose': "تم تصميم هذا التطبيق لمساعدتك في إدارة صحتك.",
+        'explore_features': "استخدم قائمة التنقل لاستكشاف الميزات المختلفة.",
+        'login_register': "تسجيل الدخول أو التسجيل (مصادقة OTP)",
+        'otp_note': "ملاحظة: نظام المصادقة هذا يعتمد على إرسال رمز لمرة واحدة (OTP) للإيميل. لا توجد خاصية منفصلة لإعادة تعيين كلمة المرور لأن الرمز الجديد يمنحك الوصول دائماً.",
+        'enter_email': "أدخل بريدك الإلكتروني لاستلام رمز الدخول",
+        'send_code': "إرسال الرمز",
+        'enter_email_warning': "الرجاء إدخال بريدك الإلكتروني.",
+        'code_sent_to': "تم إرسال رمز إلى",
+        'enter_code': "أدخل الرمز من بريدك الإلكتروني",
+        'verify_code': "التحقق من الرمز",
+        'enter_code_warning': "الرجاء إدخال الرمز.",
+        'otp_sent_success': "تم إرسال رمز OTP إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.",
+        'otp_error': "خطأ أثناء إرسال رمز OTP:",
+        'verification_success': "تم التحقق بنجاح! لقد سجلت دخولك الآن.",
+        'otp_invalid': "رمز OTP غير صالح. يرجى المحاولة مرة أخرى.",
+        'verification_error': "خطأ أثناء التحقق من رمز OTP:",
+        'logout': "تسجيل الخروج",
+        'logged_out': "تم تسجيل خروجك.",
+        'navigation': "التنقل",
+        'home_page': "الرئيسية",
+        'products_page': "كتالوج المنتجات",
+        'admin_page': "لوحة المسؤول",
+        'water_page': "حاسبة المياه اليومية",
+        'exercise_page': "توصيات التمارين",
+        'admin_dashboard': "لوحة تحكم المسؤول",
+        'admin_password': "أدخل كلمة مرور المسؤول",
+        'admin_access_denied': "كلمة المرور غير صحيحة. تم رفض الوصول.",
+        'add_product': "إضافة منتج جديد",
+        'product_name': "اسم المنتج",
+        'calories': "السعرات الحرارية",
+        'sugar_g': "السكر (غ)",
+        'carbs_g': "الكربوهيدرات (غ)",
+        'protein_g': "البروتين (غ)",
+        'fats_g': "الدهون (غ)",
+        'suitability_question': "هل هذا المنتج مناسب لمرضى السكري؟",
+        'suitable': "مناسب",
+        'moderately_suitable': "مناسب باعتدال",
+        'not_suitable': "غير مناسب",
+        'upload_image': "تحميل صورة المنتج",
+        'add_product_button': "إضافة المنتج",
+        'fill_all_fields': "الرجاء ملء جميع الحقول المطلوبة وتحميل صورة.",
+        'adding_product_spinner': "جاري إضافة المنتج...",
+        'product_added_success': "تمت إضافة المنتج بنجاح!",
+        'product_added_failed': "فشل في إضافة المنتج:",
+        'edit_delete_product': "تعديل أو حذف منتج موجود",
+        'select_product_to_edit': "اختر منتجاً للتعديل",
+        'update_product': "تحديث المنتج",
+        'delete_product': "حذف المنتج",
+        'upload_new_image': "تحميل صورة جديدة (اختياري)",
+        'updating_image_spinner': "جاري تحميل الصورة الجديدة...",
+        'product_updated_success': "تم تحديث المنتج بنجاح!",
+        'product_updated_failed': "فشل في تحديث المنتج:",
+        'product_deleted_success': "تم حذف المنتج بنجاح!",
+        'product_deleted_failed': "فشل في حذف المنتج:",
+        'no_products_available': "لا توجد منتجات متاحة للتعديل أو الحذف.",
+        'error_loading_products': "خطأ في تحميل المنتجات للتعديل/الحذف:",
+        'search_product': "البحث عن منتج...",
+        'suitability_label': "ملاءمة",
+        'no_products_found': "لم يتم العثور على منتجات.",
+        'error_fetching_products': "خطأ في جلب المنتجات:",
+        'recommended_intake': "الكمية اليومية الموصى بها",
+        'water_calc_title': "حاسبة المياه",
+        'water_calc_desc': "احسب كمية الماء الموصى بها يومياً بناءً على وزنك وعمرك.",
+        'water_tips_title': "نصائح عامة لمرضى السكري",
+        'water_tip1': "نظام غذائي متوازن: ركّز على الأطعمة الكاملة، الفواكه، الخضروات، والبروتينات الخالية من الدهون.",
+        'water_tip2': "تمرين منتظم: اهدف إلى 30 دقيقة على الأقل من التمارين المعتدلة معظم أيام الأسبوع.",
+        'water_tip3': "مراقبة سكر الدم: افحص مستويات سكر الدم بانتظام حسب إرشادات طبيبك.",
+        'water_tip4': "ابقَ رطباً: شرب كمية كافية من الماء يساعد في إدارة مستويات السكر في الدم.",
+        'weight_kg': "وزنك (بالكيلوغرام)",
+        'age_years': "عمرك (بالسنوات)",
+        'calculate': "احسب",
+        'realistic_input_warning': "الرجاء إدخال وزن وعمر واقعيين للحصول على توصية صالحة.",
+        'liters': "لتر",
+        'exercise_title': "توصيات التمارين",
+        'exercise_desc': "اعثر على رياضة مناسبة لك بناءً على عمرك ووزنك.",
+        'get_rec': "احصل على توصية",
+        'exercise_tips_title': "نصائح حول ممارسة الرياضة مع مرض السكري",
+        'exercise_tip1': "استشر طبيباً: تحدث دائماً مع طبيبك قبل بدء برنامج تمارين جديد.",
+        'exercise_tip2': "افحص سكر الدم: افحص سكر الدم قبل وبعد التمرين لمعرفة كيفية استجابة جسمك.",
+        'exercise_tip3': "حافظ على رطوبتك: اشرب الكثير من الماء قبل وأثناء وبعد التمرين.",
+        'exercise_tip4': "احمل وجبة خفيفة: احتفظ بمصدر سريع للجلوكوز معك في حالة انخفاض نسبة السكر في الدم.",
+        'loading_image_error': "خطأ في تحميل الصورة:",
+        'image_upload_error': "خطأ في رفع الصورة:",
+        'db_config_error': "خطأ: لم يتم تعيين متغيرات بيئة Supabase. يرجى التحقق من ملف .env الخاص بك.",
+        'db_connect_error': "خطأ في الاتصال بـ Supabase:",
+        'rec_realistic_input': "الرجاء إدخال عمر ووزن واقعيين للحصول على توصية موثوقة. بالنسبة للأطفال الصغار جداً، يجب أن يركز النشاط البدني على اللعب الحر.",
+        'rec_under_18': "أنت في سن رائعة للنشاط البدني! ركّز على الأنشطة الممتعة مثل الجري أو السباحة أو الرياضات الجماعية.",
+        'rec_18_40_light': "وزن جيد لسنك! حاول الحفاظ عليه من خلال أنشطة مثل الجري وركوب الدراجات وتمارين الأثقال.",
+        'rec_18_40_heavy': "فكّر في تمارين الكارديو المعتدلة مثل المشي السريع أو الهرولة أو السباحة للتحكم في الوزن. استشر مدرباً للحصول على خطة مناسبة.",
+        'rec_over_40': "ركّز على التمارين منخفضة التأثير مثل المشي أو السباحة أو اليوجا. هذه الأنشطة لطيفة على المفاصل وممتازة للتحكم في سكر الدم.",
     },
-    "en": {
-        # Navigation & Page Titles
-        "home_page": "Home Page",
-        "products_catalog": "Product Catalog",
-        "admin_dashboard": "Admin Dashboard",
-        "water_calculator": "Water Calculator",
-        "exercise_recs": "Exercise Recommendations",
-        "navigation": "Navigation",
-        "logout": "Logout",
-        "lang_selector": "Select Language",
-
-        # Home Page
-        "welcome_title": "Welcome to the Smart Diabetes Assistant",
-        "welcome_msg_1": "This application is designed to help you manage your health and diet.",
-        "welcome_msg_2": "Use the navigation menu to explore the different features.",
-
-        # Auth Page
-        "auth_title": "Login and Authentication",
-        "pass_auth_title": "Password Authentication",
-        "mode_login": "Login (Email & Password Required)",
-        "mode_signup": "Signup",
-        "mode_forgot": "Forgot Password?",
-        "login_info": "Note: Successful login requires the **correct password** followed by **OTP verification**.",
-        "email": "Email",
-        "password": "Password",
-        "confirm_password": "Confirm Password",
-        "login_btn": "Login",
-        "signup_btn": "Signup",
-        "signup_success": "Registration successful! Please use the 'Login' option to proceed with verification and access the application.",
-        "otp_verification": "One-Time Password (OTP) Verification",
-        "otp_sent_info": "An OTP code has been sent to **{}**. Please enter it below to complete login.",
-        "enter_otp": "Enter OTP Code from your Email",
-        "verify_btn": "Verify Code",
-        "cancel_login": "Cancel Login",
-        "send_reset_link": "Send Reset Link",
-        "enter_reset_email": "Enter your Email to receive a password reset link",
-
-        # Products Page
-        "products_title": "Product Catalog",
-        "products_placeholder": "Healthy Foods",
-        "search_product": "Search for a product...",
-        "suitability": "Suitability",
-        "calories": "Calories",
-        "carbs": "Carbs (g)",
-        "sugar": "Sugar (g)",
-        "protein": "Protein (g)",
-        "fats": "Fats (g)",
-        "not_available": "N/A",
-        "no_products": "No products found.",
-        
-        # Water Calculator
-        "water_calc_title": "Water Intake Calculator",
-        "water_calc_msg": "Calculate your recommended daily water intake based on your weight and age.",
-        "water_placeholder": "Stay Hydrated",
-        "general_advice": "General Advice for Diabetics",
-        "advice_1": "- **Balanced Diet:** Focus on whole foods, fruits, vegetables, and lean proteins.",
-        "advice_2": "- **Regular Exercise:** Aim for at least 30 minutes of moderate exercise most days of the week.",
-        "advice_3": "- **Monitor Blood Sugar:** Check your blood sugar levels regularly as advised by your doctor.",
-        "advice_4": "- **Stay Hydrated:** Drinking enough water helps manage blood sugar levels.",
-        "weight_kg": "Your Weight (kg)",
-        "age_years": "Your Age (years)",
-        "calculate_btn": "Calculate",
-        "reliable_warning": "Please enter a realistic weight and age (over 15 kg and 5 years) for a reliable recommendation.",
-        "recommended_intake": "Your recommended daily water intake is **{:.2f} liters**.",
-
-        # Exercise Recommendations
-        "exercise_title": "Exercise Recommendations",
-        "exercise_msg": "Find a suitable exercise based on your age and weight.",
-        "exercise_placeholder": "Exercise and Health",
-        "get_rec_btn": "Get Recommendation",
-        "tips_exercise": "Tips for Exercising with Diabetes",
-        "tip_1": "- **Consult a Doctor:** Always talk to your doctor before starting any new exercise program.",
-        "tip_2": "- **Check Blood Sugar:** Test your blood sugar before and after exercise to know how your body responds.",
-        "tip_3": "- **Stay Hydrated:** Drink plenty of water before, during, and after your workout.",
-        "tip_4": "- **Carry a Snack:** Keep a fast-acting source of glucose with you in case of a sudden sugar drop.",
-
-        # Admin Page
-        "admin_title": "Admin Dashboard",
-        "admin_password": "Enter Admin Password",
-        "admin_denied": "Incorrect password. Access denied.",
-        "add_product_title": "Add New Product",
-        "product_name": "Product Name",
-        "upload_image": "Upload Product Image",
-        "add_product_btn": "Add Product",
-        "edit_delete_title": "Edit or Delete Existing Product",
-        "select_product_edit": "Select a product to edit",
-        "update_btn": "Update Product",
-        "delete_btn": "Delete Product",
-        "upload_new_image": "Upload New Image (Optional)",
-        "suitability_options": ["Suitable", "Moderately Suitable", "Not Suitable"],
+    'en': {
+        'app_title': "Smart Diabetes Assistant",
+        'welcome': "Welcome to the Smart Diabetes Assistant",
+        'app_purpose': "This app is designed to help you manage your health.",
+        'explore_features': "Use the navigation menu to explore different features.",
+        'login_register': "Login or Register (OTP Auth)",
+        'otp_note': "Note: This authentication system relies on sending a one-time code (OTP) to your email. There is no separate 'Reset Password' feature as requesting a new code always grants access.",
+        'enter_email': "Enter your email to receive a login code",
+        'send_code': "Send Code",
+        'enter_email_warning': "Please enter your email.",
+        'code_sent_to': "A code has been sent to",
+        'enter_code': "Enter the code from your email",
+        'verify_code': "Verify Code",
+        'enter_code_warning': "Please enter the code.",
+        'otp_sent_success': "OTP code sent to your email. Please check your inbox.",
+        'otp_error': "Error sending OTP:",
+        'verification_success': "Verification successful! You are now logged in.",
+        'otp_invalid': "Invalid OTP code. Please try again.",
+        'verification_error': "Error verifying OTP:",
+        'logout': "Logout",
+        'logged_out': "You have been logged out.",
+        'navigation': "Navigation",
+        'home_page': "Home",
+        'products_page': "Product Catalog",
+        'admin_page': "Admin Dashboard",
+        'water_page': "Daily Water Calculator",
+        'exercise_page': "Exercise Recommendations",
+        'admin_dashboard': "Admin Dashboard",
+        'admin_password': "Enter Admin Password",
+        'admin_access_denied': "Incorrect password. Access denied.",
+        'add_product': "Add a New Product",
+        'product_name': "Product Name",
+        'calories': "Calories",
+        'sugar_g': "Sugar (g)",
+        'carbs_g': "Carbohydrates (g)",
+        'protein_g': "Protein (g)",
+        'fats_g': "Fats (g)",
+        'suitability_question': "Is this product suitable for diabetics?",
+        'suitable': "Suitable",
+        'moderately_suitable': "Moderately Suitable",
+        'not_suitable': "Not Suitable",
+        'upload_image': "Upload Product Image",
+        'add_product_button': "Add Product",
+        'fill_all_fields': "Please fill in all required fields and upload an image.",
+        'adding_product_spinner': "Adding product...",
+        'product_added_success': "Product added successfully!",
+        'product_added_failed': "Failed to add product:",
+        'edit_delete_product': "Edit or Delete Existing Product",
+        'select_product_to_edit': "Select a product to edit",
+        'update_product': "Update Product",
+        'delete_product': "Delete Product",
+        'upload_new_image': "Upload new image (optional)",
+        'updating_image_spinner': "Uploading new image...",
+        'product_updated_success': "Product updated successfully!",
+        'product_updated_failed': "Failed to update product:",
+        'product_deleted_success': "Product deleted successfully!",
+        'product_deleted_failed': "Failed to delete product:",
+        'no_products_available': "No products available to edit or delete.",
+        'error_loading_products': "Error loading products for edit/delete:",
+        'search_product': "Search for a product...",
+        'suitability_label': "Suitability",
+        'no_products_found': "No products found.",
+        'error_fetching_products': "Error fetching products:",
+        'recommended_intake': "Your recommended daily water intake is",
+        'water_calc_title': "Water Intake Calculator",
+        'water_calc_desc': "Calculate your recommended daily water intake based on your weight and age.",
+        'water_tips_title': "General Tips for Diabetics",
+        'water_tip1': "Balanced Diet: Focus on whole foods, fruits, vegetables, and lean proteins.",
+        'water_tip2': "Regular Exercise: Aim for at least 30 minutes of moderate exercise most days of the week.",
+        'water_tip3': "Monitor Blood Sugar: Check your blood sugar levels regularly as advised by your doctor.",
+        'water_tip4': "Stay Hydrated: Drinking enough water helps manage blood sugar levels.",
+        'weight_kg': "Your Weight (in kg)",
+        'age_years': "Your Age (in years)",
+        'calculate': "Calculate",
+        'realistic_input_warning': "Please enter a realistic weight (e.g., above 15 kg) and age (e.g., above 5 years) to get a valid recommendation.",
+        'liters': "liters",
+        'exercise_title': "Exercise Recommendations",
+        'exercise_desc': "Find a sport that's suitable for you based on your age and weight.",
+        'get_rec': "Get Recommendation",
+        'exercise_tips_title': "Tips on Exercising with Diabetes",
+        'exercise_tip1': "Consult a Doctor: Always talk to your doctor before starting a new exercise program.",
+        'exercise_tip2': "Check Blood Sugar: Check your blood sugar before and after exercise to see how your body responds.",
+        'exercise_tip3': "Stay Hydrated: Drink plenty of water before, during, and after your workout.",
+        'exercise_tip4': "Carry a Snack: Keep a quick source of glucose with you in case of a low blood sugar episode.",
+        'loading_image_error': "Error loading image:",
+        'image_upload_error': "Error uploading image:",
+        'db_config_error': "Error: Supabase environment variables are not set. Please check your .env file.",
+        'db_connect_error': "Error connecting to Supabase:",
+        'rec_realistic_input': "Please enter a realistic age and weight to get a reliable recommendation. For very young children, physical activity should focus on free play.",
+        'rec_under_18': "You are in a great age for physical activity! Focus on playful activities like running, swimming, or team sports.",
+        'rec_18_40_light': "Good weight for your age! Try to maintain it with activities like running, cycling, and weight training.",
+        'rec_18_40_heavy': "Consider moderate-intensity cardio like brisk walking, jogging, or swimming to manage weight. Consult a trainer for a suitable plan.",
+        'rec_over_40': "Focus on low-impact exercises like walking, swimming, or yoga. These activities are gentle on joints and great for blood sugar control.",
     }
 }
 
-# --- دالة مساعدة للحصول على النص المترجم ---
-def get_text(key):
-    # افتراض اللغة العربية (ar) كخيار افتراضي
+def t(key):
+    """دالة مساعدة لجلب النص المترجم بناءً على اللغة المختارة."""
     lang = st.session_state.get('language', 'ar')
-    return TEXTS[lang].get(key, key) # يعود بالنص نفسه إذا لم يتم العثور على المفتاح
+    return TRANSLATIONS[lang].get(key, key) 
 
-# --- إعدادات الصفحة (يجب أن يكون هذا أول استدعاء لـ Streamlit) ---
-st.set_page_config(
-    page_title="SMART DA .COM", 
-    page_icon="🩺", # الإيموجي الطبي
-    layout="wide",       
-    initial_sidebar_state="expanded"
-)
-# -----------------------------------------------------------------
-
-# --- الإعداد والتخزين المؤقت ---
+# --- دوال الإعداد والتخزين المؤقت (Setup and Caching Functions) ---
 
 load_dotenv()
 
-# Initialize Supabase client once
+# استخدام st.cache_resource لضمان تهيئة Supabase مرة واحدة فقط
 @st.cache_resource
 def init_supabase_client() -> Client | None:
-    # Fetch environment keys
+    """تهيئة عميل Supabase وضمان عدم تكرار العملية."""
     supabase_url: str = os.environ.get("SUPABASE_URL")
     supabase_key: str = os.environ.get("SUPABASE_KEY")
 
     if not supabase_url or not supabase_key:
-        st.error("Error: Supabase environment variables are not set. Please check your .env file.")
+        st.error(t('db_config_error'))
         return None
     try:
+        # st.cache_resource يضمن أن هذا الكائن لا يُنشأ إلا مرة واحدة
         return create_client(supabase_url, supabase_key)
     except Exception as e:
-        st.error(f"Error connecting to Supabase: {e}")
+        st.error(f"{t('db_connect_error')} {e}")
         return None
 
 def init_session_state():
-    # Initialize session states
-    if 'user' not in st.session_state: st.session_state['user'] = None
-    if 'otp_sent' not in st.session_state: st.session_state['otp_sent'] = False
-    if 'user_email' not in st.session_state: st.session_state['user_email'] = ""
-    if 'page' not in st.session_state: st.session_state['page'] = 'Home'
-    if 'language' not in st.session_state: st.session_state['language'] = 'ar' # اللغة الافتراضية
+    """تهيئة متغيرات حالة الجلسة (Session State)."""
+    if 'user' not in st.session_state:
+        st.session_state['user'] = None
+    if 'otp_sent' not in st.session_state: # تم استعادة هذه الحالة لمنطق OTP
+        st.session_state['otp_sent'] = False
+    if 'user_email' not in st.session_state:
+        st.session_state['user_email'] = ""
+    if 'page' not in st.session_state:
+        st.session_state['page'] = 'Home'
+    if 'language' not in st.session_state: # حالة اللغة الجديدة
+        st.session_state['language'] = 'ar' # الافتراضي: العربية
 
-# --- التهيئة العامة ---
+# --- الإعداد الرئيسي للتطبيق ---
 supabase = init_supabase_client()
 init_session_state()
 
-# --- وظائف المصادقة (لم تتغير) ---
-
-def signup_user(email, password):
-    # وظيفة تسجيل مستخدم جديد
-    if not supabase: return
-    try:
-        response = supabase.auth.sign_up({"email": email, "password": password})
-        if response.user:
-            st.success(get_text("signup_success"))
-            return True
-        else:
-            st.error("Registration failed. Email might already exist or password is weak.")
-            return False
-    except Exception as e:
-        st.error(f"Error during registration: {e}")
-        return False
-
-def login_user(email, password):
-    # وظيفة تسجيل الدخول (تبدأ بخطوة التحقق من كلمة المرور تليها OTP)
-    if not supabase: return
-    try:
-        # 1. Verify password
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        if response.user:
-            # 2. Sign out immediately to enforce OTP, then send OTP
-            supabase.auth.sign_out() 
-            st.session_state['user'] = None
-            st.success("Password verified! Sending One-Time Password (OTP) to your email...")
-            send_otp(email)
-            st.rerun()
-            return True
-        else:
-            st.error("Incorrect email or password.")
-            return False
-    except Exception as e:
-        st.error(f"Error during login verification: {e}")
-        return False
-
-def reset_password(email):
-    # وظيفة إعادة تعيين كلمة المرور
-    if not supabase: return
-    try:
-        supabase.auth.reset_password_for_email(email)
-        st.session_state['user_email'] = email
-        st.success("A password reset link has been sent to your email. Please check your inbox.")
-    except Exception as e:
-        st.error(f"Error sending password reset link: {e}")
+# --- دوال المصادقة (Auth Functions) ---
 
 def send_otp(email):
-    # وظيفة إرسال رمز OTP
+    """إرسال رمز OTP إلى البريد الإلكتروني لتسجيل الدخول/التسجيل."""
     if not supabase: return
     try:
+        # sign_in_with_otp يتعامل مع تسجيل الدخول والتسجيل في نفس الوقت
         supabase.auth.sign_in_with_otp({"email": email})
         st.session_state['otp_sent'] = True
         st.session_state['user_email'] = email
-        st.toast("Code sent!")
+        st.success(t('otp_sent_success'))
     except Exception as e:
-        st.error(f"Error sending OTP code: {e}")
+        st.error(f"{t('otp_error')} {e}")
 
 def verify_otp(email, token):
-    # وظيفة التحقق من رمز OTP
+    """التحقق من رمز OTP."""
     if not supabase: return
     try:
         response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
@@ -308,14 +263,13 @@ def verify_otp(email, token):
             st.session_state['otp_sent'] = False
             st.session_state['user_email'] = ""
             st.session_state['page'] = 'Home'
-            st.success("Verification successful! You are now logged in.")
+            st.success(t('verification_success'))
         else:
-            st.error("Invalid OTP code. Please try again.")
+            st.error(t('otp_invalid'))
     except Exception as e:
-        st.error(f"Error verifying OTP code: {e}")
+        st.error(f"{t('verification_error')} {e}")
 
 def logout_user():
-    # وظيفة تسجيل الخروج
     if not supabase: return
     try:
         supabase.auth.sign_out()
@@ -323,179 +277,134 @@ def logout_user():
         st.session_state['otp_sent'] = False
         st.session_state['user_email'] = ""
         st.session_state['page'] = 'Home'
-        st.info("You have been logged out.")
+        st.info(t('logged_out'))
     except Exception as e:
         st.error(f"Error during logout: {e}")
 
-# --- وظائف إدارة المنتجات والملفات (لم تتغير) ---
+# --- دوال إدارة المنتجات والملفات (Product and File Management Functions) ---
 
+# دالة رفع الصورة إلى Supabase Storage
 def upload_image_to_storage(image_file):
     if not supabase: return None
     try:
+        # إنشاء اسم ملف فريد باستخدام UUID
         file_extension = image_file.name.split(".")[-1]
         file_name = f"{uuid.uuid4()}.{file_extension}"
+        # **هام:** يجب التأكد من إنشاء bucket بنفس هذا الاسم في لوحة تحكم Supabase Storage
         bucket_name = "product_images" 
+
+        # قراءة محتوى الملف
         file_bytes = image_file.read()
+
+        # رفع الملف إلى Supabase Storage
         supabase.storage.from_(bucket_name).upload(
             file=file_bytes,
             path=file_name,
             file_options={"content-type": image_file.type}
         )
+
+        # الحصول على الرابط العام للصورة المرفوعة
         public_url = supabase.storage.from_(bucket_name).get_public_url(file_name)
         return public_url
     except Exception as e:
-        st.error(f"Error uploading image: {e}")
+        st.error(f"{t('image_upload_error')} {e}")
         return None
 
+# تم تحديث الدالة لتشمل 'carbs'
 def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, image_url):
     if not supabase: return
     try:
         supabase.table("products").insert({"name": name, "calories": calories, "sugar": sugar, "protein": protein, "fats": fats, "carbs": carbs, "suitability": suitability, "image_url": image_url}).execute()
-        st.success("Product added successfully!")
+        st.success(t('product_added_success'))
     except Exception as e:
-        st.error(f"Failed to add product: {e}")
+        st.error(f"{t('product_added_failed')} {e}")
 
 def update_product_in_db(product_id, data_to_update):
     if not supabase: return
     try:
         supabase.table("products").update(data_to_update).eq("id", product_id).execute()
-        st.success("Product updated successfully!")
+        st.success(t('product_updated_success'))
     except Exception as e:
-        st.error(f"Failed to update product: {e}")
+        st.error(f"{t('product_updated_failed')} {e}")
 
 def delete_product_from_db(product_id):
     if not supabase: return
     try:
         supabase.table("products").delete().eq("id", product_id).execute()
-        st.success("Product deleted successfully!")
+        st.success(t('product_deleted_success'))
     except Exception as e:
-        st.error(f"Failed to delete product: {e}")
+        st.error(f"{t('product_deleted_failed')} {e}")
 
-# --- وظائف مساعدة (لم تتغير) ---
+# --- دوال حاسبة المياه (Water Calculator Functions) ---
+
 def calculate_water_intake(weight_kg, age_years):
-    if weight_kg <= 15 or age_years <= 5: return 0 
-    if 18 <= age_years <= 30: recommended_ml = weight_kg * 35
-    elif 31 <= age_years <= 55: recommended_ml = weight_kg * 30
-    else: recommended_ml = weight_kg * 25
+    # تم تحديد قيود أكثر واقعية هنا (للأطفال أو البالغين الأصحاء)
+    if weight_kg <= 15 or age_years <= 5: # الحد الأدنى المنطقي
+        return 0 
+        
+    if 18 <= age_years <= 30:
+        recommended_ml = weight_kg * 35
+    elif 31 <= age_years <= 55:
+        recommended_ml = weight_kg * 30
+    else:
+        recommended_ml = weight_kg * 25
     return recommended_ml / 1000
 
+# --- دوال صفحة الرياضة ---
 def get_exercise_recommendation(age, weight):
-    # هذه النصوص لم يتم وضعها في القاموس لأنها ديناميكية ويجب ترجمتها هنا
-    lang = st.session_state.get('language', 'ar')
-    if lang == 'ar':
-        if age <= 5 or weight <= 15:
-            return "الرجاء إدخال عمر ووزن واقعيين للحصول على توصية موثوقة. بالنسبة للأطفال الصغار جدًا، يجب أن تركز الأنشطة البدنية على اللعب الحر."
-        if age < 18:
-            return "أنت في عمر ممتاز للنشاط البدني! ركز على الأنشطة الممتعة مثل الجري أو السباحة أو الرياضات الجماعية."
-        elif age <= 40:
-            if weight < 70:
-                return "وزن جيد لعمرك! حاول الحفاظ عليه من خلال أنشطة مثل الجري وركوب الدراجات وتمارين القوة."
-            else:
-                return "فكر في تمارين الكارديو المعتدلة الشدة مثل المشي السريع أو الهرولة أو السباحة لإدارة الوزن. استشر مدربًا للحصول على خطة مناسبة."
-        else:
-            return "ركز على التمارين منخفضة التأثير مثل المشي أو السباحة أو اليوجا. هذه لطيفة على المفاصل وممتازة للتحكم في سكر الدم."
-    else: # English
-        if age <= 5 or weight <= 15:
-            return "Please enter a realistic age and weight for a trusted recommendation. For very young children, physical activities should focus on free play."
-        if age < 18:
-            return "You're at a great age for physical activity! Focus on fun activities like running, swimming, or team sports."
-        elif age <= 40:
-            if weight < 70:
-                return "Good weight for your age! Try to maintain it with activities like running, cycling, and strength training."
-            else:
-                return "Consider moderate-intensity cardio exercises like brisk walking, jogging, or swimming for weight management. Consult a trainer for a suitable plan."
-        else:
-            return "Focus on low-impact exercises like walking, swimming, or yoga. These are gentle on joints and excellent for blood sugar control."
+    # تم تحديد قيود أكثر واقعية هنا
+    if age <= 5 or weight <= 15:
+        return t('rec_realistic_input')
         
-def safe_number(key, product):
-    value = product.get(key)
-    return float(value) if value is not None else 0.0
+    if age < 18:
+        return t('rec_under_18')
+    elif age <= 40:
+        if weight < 70:
+            return t('rec_18_40_light')
+        else:
+            return t('rec_18_40_heavy')
+    else:
+        return t('rec_over_40')
 
-# --- صفحات التطبيق (تم تحديثها لدعم الترجمة) ---
+# --- صفحات التطبيق (App Pages) ---
 
 def show_auth_page():
-    # وظيفة عرض صفحة المصادقة
-    st.title(get_text("auth_title"))
-
-    current_otp_email = st.session_state.get('user_email', "")
-    is_otp_sent = st.session_state.get('otp_sent', False)
+    st.title(t('login_register'))
     
-    # 1. Show OTP verification 
-    if is_otp_sent:
-        with st.container():
-            st.subheader(get_text("otp_verification"))
-            with st.form(key="verify_otp_form_key_main"):
-                st.info(get_text("otp_sent_info").format(current_otp_email))
-                token = st.text_input(get_text("enter_otp"), key="otp_token_input_main")
-                col_verify, col_resend = st.columns(2)
-                
-                with col_verify:
-                    verify_button = st.form_submit_button(get_text("verify_btn"))
-                
-                with col_resend:
-                    if st.form_submit_button(get_text("cancel_login")): 
-                        st.session_state['otp_sent'] = False
-                        st.session_state['user_email'] = ""
-                        st.rerun() 
-
-                if verify_button and token:
-                    verify_otp(current_otp_email, token)
-                elif verify_button:
-                    st.warning("Please enter the OTP code.")
-        return
-
-    # 2. Show standard authentication flow
-    st.subheader(get_text("pass_auth_title"))
+    st.markdown(f"*{t('otp_note')}*")
     
-    auth_mode_options = [get_text("mode_login"), get_text("mode_signup"), get_text("mode_forgot")]
-    auth_mode = st.radio(get_text("lang_selector"), auth_mode_options, key="password_auth_mode")
-
-    if auth_mode == get_text("mode_login"):
-        st.info(get_text("login_info"))
-        with st.form(key="login_form_key"):
-            email = st.text_input(get_text("email"))
-            password = st.text_input(get_text("password"), type="password")
-            submit_button = st.form_submit_button(get_text("login_btn"))
-            if submit_button and email and password:
-                login_user(email, password) 
-            elif submit_button:
-                st.warning("Please enter both Email and Password.")
-
-    elif auth_mode == get_text("mode_signup"):
-        with st.form(key="register_form_key"):
-            email = st.text_input(get_text("email"))
-            password = st.text_input(f"{get_text('password')} (Min 6 Characters)", type="password")
-            confirm_password = st.text_input(get_text("confirm_password"), type="password")
-            submit_button = st.form_submit_button(get_text("signup_btn"))
-            if submit_button and email and password and confirm_password:
-                if password == confirm_password:
-                    signup_user(email, password)
-                else:
-                    st.error("Passwords do not match.")
-            elif submit_button:
-                st.warning("Please fill in all fields.")
-    
-    elif auth_mode == get_text("mode_forgot"):
-        with st.form(key="forgot_password_form_key"):
-            email = st.text_input(get_text("enter_reset_email"))
-            submit_button = st.form_submit_button(get_text("send_reset_link"))
+    if not st.session_state['otp_sent']:
+        with st.form(key="send_otp_form_key"):
+            email = st.text_input(t('enter_email'))
+            submit_button = st.form_submit_button(t('send_code'))
             if submit_button and email:
-                reset_password(email)
+                send_otp(email)
             elif submit_button:
-                st.warning("Please enter your Email.")
-
+                st.warning(t('enter_email_warning'))
+    else:
+        with st.form(key="verify_otp_form_key"):
+            st.write(f"{t('code_sent_to')} {st.session_state['user_email']}")
+            token = st.text_input(t('enter_code'))
+            submit_button = st.form_submit_button(t('verify_code'))
+            if submit_button and token:
+                verify_otp(st.session_state['user_email'], token)
+            elif submit_button:
+                st.warning(t('enter_code_warning'))
 
 def show_home_page():
-    # وظيفة عرض الصفحة الرئيسية
-    st.title(get_text("welcome_title"))
-    st.write(get_text("welcome_msg_1"))
-    st.write(get_text("welcome_msg_2"))
+    st.title(t('welcome'))
+    
+    # الصورة الجديدة التي تعبر عن اسم البرنامج بالإنجليزية
+    image_text = t('app_title').replace(" ", "+") # لضمان ظهور النص الإنجليزي في البلايس هولدر
+    st.image(f"https://placehold.co/800x200/50C878/FFFFFF?text={image_text}", caption=t('app_title'), use_column_width=True)
+    
+    st.write(t('app_purpose'))
+    st.write(t('explore_features'))
 
 def show_products_page():
-    # وظيفة عرض كتالوج المنتجات
-    st.title(get_text("products_title"))
-    st.image(f"https://placehold.co/600x200/50C878/FFFFFF?text={get_text('products_placeholder')}")
-    search_query = st.text_input(get_text("search_product"))
+    st.title(t('products_page'))
+    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Foods")
+    search_query = st.text_input(t('search_product'))
     try:
         query = supabase.table("products").select("*")
         if search_query:
@@ -503,241 +412,196 @@ def show_products_page():
         products = query.execute().data
         if products:
             for product in products:
-                # نحتاج إلى التعامل مع Suitability (الملائمة) بترجمتها هنا
-                suitability_text = get_text("suitability_options")[
-                    ["Suitable", "Moderately Suitable", "Not Suitable"].index(product['suitability'])
-                ] if product['suitability'] in ["Suitable", "Moderately Suitable", "Not Suitable"] else product['suitability']
-
-                st.subheader(f"{product['name']} - {get_text('suitability')}: {suitability_text}")
+                # استخدام الترجمة لتصنيف الملاءمة
+                suitability_text = t(product['suitability'].lower().replace(" ", "_")) 
+                
+                st.subheader(f"{product['name']} - {t('suitability_label')}: {suitability_text}")
                 st.image(product['image_url'], width=200)
-                st.write(f"**{get_text('calories')}:** {product['calories']}")
+                st.write(f"**{t('calories')}:** {product['calories']}")
                 carbs_value = product.get('carbs')
-                st.write(f"**{get_text('carbs')}:** {carbs_value if carbs_value is not None else get_text('not_available')}")
-                st.write(f"**{get_text('sugar')}:** {product['sugar']}g")
-                st.write(f"**{get_text('protein')}:** {product['protein']}g")
-                st.write(f"**{get_text('fats')}:** {product['fats']}g")
+                st.write(f"**{t('carbs_g')}:** {carbs_value if carbs_value is not None else 'N/A'}")
+                st.write(f"**{t('sugar_g')}:** {product['sugar']}g")
+                st.write(f"**{t('protein_g')}:** {product['protein']}g")
+                st.write(f"**{t('fats_g')}:** {product['fats']}g")
                 st.write("---")
         else:
-            st.info(get_text("no_products"))
+            st.info(t('no_products_found'))
     except Exception as e:
-        st.error(f"Error fetching products: {e}")
+        st.error(f"{t('error_fetching_products')} {e}")
 
 def show_admin_page():
-    # وظيفة عرض لوحة تحكم المسؤول
-    st.title(get_text("admin_title"))
-    admin_password = st.text_input(get_text("admin_password"), type="password")
-    SECRET_CODE = "Nn1122334455"
+    st.title(t('admin_dashboard'))
+    admin_password = st.text_input(t('admin_password'), type="password")
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
         show_edit_delete_form()
     else:
-        st.warning(get_text("admin_denied"))
+        st.warning(t('admin_access_denied'))
 
 def show_add_product_form():
-    # وظيفة عرض نموذج إضافة منتج
-    st.subheader(get_text("add_product_title"))
+    st.subheader(t('add_product'))
+    suitability_options = [t('suitable'), t('moderately_suitable'), t('not_suitable')]
     with st.form(key="add_product_form_key"):
-        product_name = st.text_input(get_text("product_name"))
-        calories = st.number_input(get_text("calories"), min_value=0)
-        sugar = st.number_input(get_text("sugar"), min_value=0.0)
-        carbs = st.number_input(get_text("carbs"), min_value=0.0)
-        protein = st.number_input(get_text("protein"), min_value=0.0)
-        fats = st.number_input(get_text("fats"), min_value=0.0)
-        
-        # استخدام الخيارات المترجمة
-        suitability_options = get_text("suitability_options")
-        suitability = st.selectbox(f"Is this product suitable for diabetics? ({get_text('suitability')})", suitability_options)
-        
-        uploaded_image = st.file_uploader(get_text("upload_image"), type=["png", "jpg", "jpeg"])
-        submit_button = st.form_submit_button(get_text("add_product_btn"))
+        product_name = st.text_input(t('product_name'))
+        calories = st.number_input(t('calories'), min_value=0)
+        sugar = st.number_input(t('sugar_g'), min_value=0.0)
+        carbs = st.number_input(t('carbs_g'), min_value=0.0)
+        protein = st.number_input(t('protein_g'), min_value=0.0)
+        fats = st.number_input(t('fats_g'), min_value=0.0)
+        suitability = st.selectbox(t('suitability_question'), suitability_options)
+        uploaded_image = st.file_uploader(t('upload_image'), type=["png", "jpg", "jpeg"])
+        submit_button = st.form_submit_button(t('add_product_button'))
         if submit_button:
             if uploaded_image and product_name:
-                with st.spinner('Adding product...'):
+                with st.spinner(t('adding_product_spinner')):
                     image_url = upload_image_to_storage(uploaded_image)
                     if image_url:
-                        # نحتاج إلى تخزين القيمة الإنجليزية في قاعدة البيانات لضمان التناسق
-                        db_suitability = ["Suitable", "Moderately Suitable", "Not Suitable"][suitability_options.index(suitability)]
+                        # نستخدم القيمة الإنجليزية (المفتاح) لحفظها في قاعدة البيانات
+                        db_suitability = suitability_options[suitability_options.index(suitability)].lower().replace(" ", "_")
                         add_new_product(product_name, calories, sugar, protein, fats, carbs, db_suitability, image_url)
             else:
-                st.warning("Please fill in all required fields and upload an image.")
+                st.warning(t('fill_all_fields'))
 
 def show_edit_delete_form():
-    # وظيفة عرض نموذج تعديل/حذف منتج
-    st.subheader(get_text("edit_delete_title"))
+    st.subheader(t('edit_delete_product'))
     try:
         products = supabase.table("products").select("*").execute().data
-        if not products:
-            st.info("No products available for editing or deletion.")
-            return
+        if products:
+            product_names = {product['name']: product for product in products}
+            selected_product_name = st.selectbox(t('select_product_to_edit'), list(product_names.keys()))
 
-        product_names = {product['name']: product for product in products}
-        selected_product_name = st.selectbox(get_text("select_product_edit"), list(product_names.keys()))
+            if selected_product_name:
+                selected_product = product_names[selected_product_name]
+                with st.form(key="edit_product_form_key"):
+                    st.image(selected_product['image_url'], width=200)
+                    new_name = st.text_input(t('product_name'), value=selected_product['name'])
+                    new_calories = st.number_input(t('calories'), value=selected_product['calories'], min_value=0)
 
-        if selected_product_name:
-            selected_product = product_names[selected_product_name]
-            with st.form(key="edit_product_form_key"):
-                st.image(selected_product.get('image_url'), width=200)
-                
-                # Input fields pre-filled with current data
-                new_name = st.text_input(get_text("product_name"), value=selected_product['name'])
-                new_calories = st.number_input(get_text("calories"), value=selected_product['calories'], min_value=0)
-                new_sugar = st.number_input(get_text("sugar"), value=safe_number('sugar', selected_product), min_value=0.0)
-                new_carbs = st.number_input(get_text("carbs"), value=safe_number('carbs', selected_product), min_value=0.0)
-                new_protein = st.number_input(get_text("protein"), value=safe_number('protein', selected_product), min_value=0.0)
-                new_fats = st.number_input(get_text("fats"), value=safe_number('fats', selected_product), min_value=0.0)
-                
-                # التعامل مع الملائمة (Suitability)
-                english_options = ["Suitable", "Moderately Suitable", "Not Suitable"]
-                translated_options = get_text("suitability_options")
-                
-                current_suitability_en = selected_product.get('suitability', english_options[0])
-                current_index = english_options.index(current_suitability_en) if current_suitability_en in english_options else 0
-                
-                new_suitability_translated = st.selectbox(f"Is this product suitable for diabetics? ({get_text('suitability')})", translated_options, index=current_index)
-                
-                new_image = st.file_uploader(get_text("upload_new_image"), type=["png", "jpg", "jpeg"])
+                    def safe_number(key, product):
+                        value = product.get(key)
+                        return float(value) if value is not None else 0.0
 
-                col1, col2 = st.columns(2)
-                with col1: update_button = st.form_submit_button(get_text("update_btn"))
-                with col2: delete_button = st.form_submit_button(get_text("delete_btn"))
-
-                if update_button:
-                    # تحويل القيمة المترجمة للملائمة مرة أخرى إلى القيمة الإنجليزية للتخزين في قاعدة البيانات
-                    db_suitability = english_options[translated_options.index(new_suitability_translated)]
+                    new_sugar = st.number_input(t('sugar_g'), value=safe_number('sugar', selected_product), min_value=0.0)
+                    new_carbs = st.number_input(t('carbs_g'), value=safe_number('carbs', selected_product), min_value=0.0)
+                    new_protein = st.number_input(t('protein_g'), value=safe_number('protein', selected_product), min_value=0.0)
+                    new_fats = st.number_input(t('fats_g'), value=safe_number('fats', selected_product), min_value=0.0)
                     
-                    image_url_to_update = selected_product.get('image_url')
-                    if new_image:
-                        with st.spinner('Uploading new image...'):
-                            image_url_to_update = upload_image_to_storage(new_image)
-                    if image_url_to_update:
-                        data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": db_suitability, "image_url": image_url_to_update}
-                        update_product_in_db(selected_product['id'], data_to_update)
+                    # استرجاع الخيارات والقيمة الحالية باللغة المختارة
+                    db_suitability_key = selected_product['suitability'].lower().replace(" ", "_")
+                    suitability_options_keys = ['suitable', 'moderately_suitable', 'not_suitable']
+                    suitability_options_translated = [t(key) for key in suitability_options_keys]
+                    
+                    try:
+                        # تحديد الفهرس بناءً على المفتاح المخزن في قاعدة البيانات
+                        current_index = suitability_options_keys.index(db_suitability_key)
+                    except ValueError:
+                        current_index = 0
 
-                if delete_button:
-                    delete_product_from_db(selected_product['id'])
+                    new_suitability_translated = st.selectbox(t('suitability_question'), suitability_options_translated, index=current_index)
+                    new_image = st.file_uploader(t('upload_new_image'), type=["png", "jpg", "jpeg"])
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        update_button = st.form_submit_button(t('update_product'))
+                    with col2:
+                        delete_button = st.form_submit_button(t('delete_product'))
+
+                    if update_button:
+                        image_url_to_update = selected_product['image_url']
+                        if new_image:
+                            with st.spinner(t('updating_image_spinner')):
+                                image_url_to_update = upload_image_to_storage(new_image)
+                        if image_url_to_update:
+                            # إعادة القيمة المختارة إلى المفتاح الإنجليزي (الذي يُخزن في DB)
+                            db_suitability_update = suitability_options_keys[suitability_options_translated.index(new_suitability_translated)]
+                            data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": db_suitability_update}
+                            if new_image: data_to_update["image_url"] = image_url_to_update
+                            update_product_in_db(selected_product['id'], data_to_update)
+
+                    if delete_button:
+                        delete_product_from_db(selected_product['id'])
+        else:
+            st.info(t('no_products_available'))
     except Exception as e:
-        st.error(f"Error loading products for edit/delete: {e}")
+        st.error(f"{t('error_loading_products')} {e}")
 
 def show_water_calculator_page():
-    # وظيفة عرض صفحة حاسبة الماء
-    st.title(get_text("water_calc_title"))
-    st.write(get_text("water_calc_msg"))
-    st.image(f"https://placehold.co/600x200/ADD8E6/000000?text={get_text('water_placeholder')}")
-    with st.expander(get_text("general_advice")):
-        st.write(get_text("advice_1"))
-        st.write(get_text("advice_2"))
-        st.write(get_text("advice_3"))
-        st.write(get_text("advice_4"))
+    st.title(t('water_calc_title'))
+    st.write(t('water_calc_desc'))
+    st.image("https://placehold.co/600x200/ADD8E6/000000?text=Stay+Hydrated")
+    with st.expander(t('water_tips_title')):
+        st.write(f"- **{t('water_tips_title')}:** {t('water_tip1')}")
+        st.write(f"- **{t('water_tips_title')}:** {t('water_tip2')}")
+        st.write(f"- **{t('water_tips_title')}:** {t('water_tip3')}")
+        st.write(f"- **{t('water_tips_title')}:** {t('water_tip4')}")
     with st.form(key="water_form_key"):
-        weight_kg = st.number_input(get_text("weight_kg"), min_value=15.0, value=70.0) 
-        age_years = st.number_input(get_text("age_years"), min_value=5, value=30) 
-        calculate_button = st.form_submit_button(get_text("calculate_btn"))
+        weight_kg = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
+        age_years = st.number_input(t('age_years'), min_value=5, value=30) 
+        calculate_button = st.form_submit_button(t('calculate'))
     if calculate_button:
         if weight_kg < 15 or age_years < 5:
-            st.warning(get_text("reliable_warning"))
+            st.warning(t('realistic_input_warning'))
         else:
             recommended_liters = calculate_water_intake(weight_kg, age_years)
-            st.success(get_text("recommended_intake").format(recommended_liters))
+            st.success(f"{t('recommended_intake')} **{recommended_liters:.2f} {t('liters')}**.")
 
 
 def show_exercise_page():
-    # وظيفة عرض توصيات التمارين
-    st.title(get_text("exercise_title"))
-    st.write(get_text("exercise_msg"))
-    st.image(f"https://placehold.co/600x200/98FB98/000000?text={get_text('exercise_placeholder')}")
+    st.title(t('exercise_title'))
+    st.write(t('exercise_desc'))
+    st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
     with st.form(key="exercise_form_key"):
-        age = st.number_input(get_text("age_years"), min_value=5, value=30) 
-        weight = st.number_input(get_text("weight_kg"), min_value=15.0, value=70.0) 
-        get_rec_button = st.form_submit_button(get_text("get_rec_btn"))
+        age = st.number_input(t('age_years'), min_value=5, value=30) 
+        weight = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
+        get_rec_button = st.form_submit_button(t('get_rec'))
     if get_rec_button:
         if age < 5 or weight < 15:
-            st.warning(get_text("reliable_warning"))
+            st.warning(t('realistic_input_warning'))
         else:
             st.info(get_exercise_recommendation(age, weight))
-    with st.expander(get_text("tips_exercise")):
-        st.write(get_text("tip_1"))
-        st.write(get_text("tip_2"))
-        st.write(get_text("tip_3"))
-        st.write(get_text("tip_4"))
+    with st.expander(t('exercise_tips_title')):
+        st.write(f"- **{t('exercise_tip1')}**")
+        st.write(f"- **{t('exercise_tip2')}**")
+        st.write(f"- **{t('exercise_tip3')}**")
+        st.write(f"- **{t('exercise_tip4')}**")
 
-# --- منطق التنقل ---
+# --- منطق التنقل الرئيسي مع اختيار اللغة ---
+st.sidebar.title(t('navigation'))
 
-def setup_navigation():
-    # وظيفة إعداد شريط التنقل الجانبي
-    
-    # محدد اللغة (Language Selector)
-    lang_map = {"العربية": "ar", "English": "en"}
-    current_lang_display = "العربية" if st.session_state['language'] == 'ar' else "English"
-    
-    st.sidebar.subheader(get_text("lang_selector"))
-    selected_lang_display = st.sidebar.radio(
-        get_text("lang_selector"), 
-        list(lang_map.keys()), 
-        index=list(lang_map.keys()).index(current_lang_display),
-        key="lang_radio"
-    )
-    
-    # تحديث حالة الجلسة باللغة الجديدة وإعادة تشغيل التطبيق لعرض التغييرات
-    if lang_map[selected_lang_display] != st.session_state['language']:
-        st.session_state['language'] = lang_map[selected_lang_display]
-        st.rerun()
-
-    # Define mapping from internal key (English) to translated display name
-    page_map_keys = {
-        "Home": get_text("home_page"),
-        "Products": get_text("products_catalog"), 
-        "Admin": get_text("admin_dashboard"), 
-        "Water Calculator": get_text("water_calculator"), 
-        "Exercise": get_text("exercise_recs")
-    }
-    
-    # Define mapping from translated display name back to internal key
-    display_to_key = {v: k for k, v in page_map_keys.items()}
-    display_names = list(page_map_keys.values())
-
-    st.sidebar.title(get_text("navigation"))
-    st.sidebar.button(get_text("logout"), on_click=logout_user)
-    
-    # Get current page name for radio default selection
-    current_page_name = page_map_keys.get(st.session_state['page'], page_map_keys["Home"])
-    initial_index = display_names.index(current_page_name) if current_page_name in display_names else 0
-
-    selected_display_name = st.sidebar.radio(get_text("navigation"), display_names, index=initial_index)
-    
-    # Update session state with the internal key and execute function
-    selected_key = display_to_key.get(selected_display_name, "Home")
-    st.session_state['page'] = selected_key
-    
-    # Execute the selected page function
-    page_functions = {
-        "Home": show_home_page,
-        "Products": show_products_page,
-        "Admin": show_admin_page,
-        "Water Calculator": show_water_calculator_page,
-        "Exercise": show_exercise_page
-    }
-    page_functions[selected_key]()
-
-# --- تنفيذ التطبيق الرئيسي ---
+# قائمة تحديد اللغة
+lang_options = {'العربية': 'ar', 'English': 'en'}
+current_lang_display = 'العربية' if st.session_state['language'] == 'ar' else 'English'
+selected_lang_display = st.sidebar.radio("Language / اللغة", list(lang_options.keys()), index=list(lang_options.keys()).index(current_lang_display))
+st.session_state['language'] = lang_options[selected_lang_display]
 
 if st.session_state['user']:
-    setup_navigation()
+    st.sidebar.button(t('logout'), on_click=logout_user)
+    
+    # تحديد أسماء الصفحات المترجمة
+    page_options = {
+        t('home_page'): show_home_page, 
+        t('products_page'): show_products_page, 
+        t('admin_page'): show_admin_page, 
+        t('water_page'): show_water_calculator_page, 
+        t('exercise_page'): show_exercise_page
+    }
+    
+    # للتأكد من أن التنقل لا ينكسر بعد تغيير اللغة
+    page_name_key = st.session_state['page'] # Key stored is 'Home', 'Products', etc.
+    
+    # البحث عن الاسم المترجم الحالي للصفحة
+    translated_page_names = {v.__name__.replace('show_', '').replace('_page', '').capitalize(): k for k, v in page_options.items()}
+    current_page_translated_name = translated_page_names.get(page_name_key, t('home_page'))
+
+    page_name_translated = st.sidebar.radio(t('navigation'), list(page_options.keys()), index=list(page_options.keys()).index(current_page_translated_name))
+    
+    # تحديث اسم الصفحة المخزن ليتوافق مع المفتاح (مثل Home, Products) لتجنب كسر التنقل
+    for name, func in page_options.items():
+        if name == page_name_translated:
+            st.session_state['page'] = func.__name__.replace('show_', '').replace('_page', '').capitalize()
+            func()
+            break
 else:
-    # يجب إظهار محدد اللغة في صفحة المصادقة أيضًا
-    lang_map = {"العربية": "ar", "English": "en"}
-    current_lang_display = "العربية" if st.session_state['language'] == 'ar' else "English"
-    
-    st.sidebar.subheader(get_text("lang_selector"))
-    selected_lang_display = st.sidebar.radio(
-        get_text("lang_selector"), 
-        list(lang_map.keys()), 
-        index=list(lang_map.keys()).index(current_lang_display),
-        key="lang_radio_auth"
-    )
-    
-    if lang_map[selected_lang_display] != st.session_state['language']:
-        st.session_state['language'] = lang_map[selected_lang_display]
-        st.rerun()
-        
     show_auth_page()
