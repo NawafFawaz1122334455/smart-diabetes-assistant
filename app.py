@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import uuid
+# يفترض أن هذه المكتبات متوفرة في بيئة تشغيل Streamlit
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -259,6 +260,7 @@ load_dotenv()
 @st.cache_resource
 def init_supabase_client() -> Client | None:
     """تهيئة عميل Supabase وضمان عدم تكرار العملية."""
+    # يرجى التأكد من تعيين هذه المتغيرات في ملف .env
     supabase_url: str = os.environ.get("SUPABASE_URL")
     supabase_key: str = os.environ.get("SUPABASE_KEY")
 
@@ -449,6 +451,7 @@ def delete_product_from_db(product_id):
 GLASS_VOLUME_ML = 250
 
 def calculate_water_intake(weight_kg, age_years):
+    """تحسب كمية المياه الموصى بها باللتر."""
     if weight_kg <= 15 or age_years <= 5: 
         return 0 
         
@@ -461,6 +464,7 @@ def calculate_water_intake(weight_kg, age_years):
     return recommended_ml / 1000
 
 def get_exercise_recommendation(age, weight):
+    """تعطي توصيات للتمارين بناءً على العمر والوزن."""
     if age <= 5 or weight <= 15:
         return t('rec_realistic_input')
         
@@ -567,7 +571,7 @@ def show_auth_page():
                 if email:
                     reset_password(email)
                 else:
-                    st.warning(t('enter_email_warning'))
+                    st.warning(t('enter_email_password_warning')) # استخدام تحذير مناسب
 
 def show_home_page():
     st.title(t('welcome'))
@@ -579,7 +583,7 @@ def show_home_page():
 
 def show_products_page():
     st.title(t('products_page'))
-    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Foods")
+    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Foods", use_column_width=True)
     search_query = st.text_input(t('search_product'))
     try:
         query = supabase.table("products").select("*")
@@ -616,7 +620,7 @@ def show_products_page():
 def show_admin_page():
     st.title(t('admin_dashboard'))
     admin_password = st.text_input(t('admin_password'), type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "admin123" # يفضل استخدام متغير بيئة لقيمة سرية حقيقية
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -667,197 +671,222 @@ def show_edit_delete_form():
                 # استخدام مفاتيح الملائمة الإنجليزية والقيم المترجمة
                 suitability_options_keys = ['suitable', 'moderately_suitable', 'not_suitable']
                 suitability_options_translated = [t(key) for key in suitability_options_keys]
-                
-                with st.form(key="edit_product_form_key"):
-                    st.image(selected_product.get('image_url', 'https://placehold.co/200x200'), width=200) 
-                    
-                    new_name = st.text_input(t('product_name'), value=selected_product['name'])
-                    new_calories = st.number_input(t('calories'), value=selected_product['calories'], min_value=0)
+                # العثور على القيمة المترجمة الافتراضية لعرضها
+                default_suitability_key = selected_product.get('suitability', 'not_suitable')
+                default_suitability_translated = t(default_suitability_key)
 
-                    def safe_number(key, product):
-                        value = product.get(key)
-                        return float(value) if value is not None else 0.0
-
-                    new_sugar = st.number_input(t('sugar_g'), value=safe_number('sugar', selected_product), min_value=0.0)
-                    new_carbs = st.number_input(t('carbs_g'), value=safe_number('carbs', selected_product), min_value=0.0)
-                    new_protein = st.number_input(t('protein_g'), value=safe_number('protein', selected_product), min_value=0.0)
-                    new_fats = st.number_input(t('fats_g'), value=safe_number('fats', selected_product), min_value=0.0)
+                with st.form(key=f"edit_product_{selected_product['id']}"):
+                    new_name = st.text_input(t('product_name'), value=selected_product['name'], key=f"edit_name_{selected_product['id']}")
+                    new_calories = st.number_input(t('calories'), min_value=0, value=selected_product['calories'], key=f"edit_cal_{selected_product['id']}")
+                    new_sugar = st.number_input(t('sugar_g'), min_value=0.0, value=selected_product['sugar'], key=f"edit_sugar_{selected_product['id']}")
+                    # التأكد من قيمة افتراضية للكربوهيدرات
+                    new_carbs = st.number_input(t('carbs_g'), min_value=0.0, value=selected_product.get('carbs', 0.0), key=f"edit_carbs_{selected_product['id']}")
+                    new_protein = st.number_input(t('protein_g'), min_value=0.0, value=selected_product['protein'], key=f"edit_prot_{selected_product['id']}")
+                    new_fats = st.number_input(t('fats_g'), min_value=0.0, value=selected_product['fats'], key=f"edit_fats_{selected_product['id']}")
                     
-                    # تحديد القيمة الافتراضية المترجمة (القيمة المخزنة هي المفتاح الإنجليزي)
-                    db_suitability_key = selected_product['suitability'] if selected_product['suitability'] in suitability_options_keys else suitability_options_keys[0]
-                    current_translated_value = t(db_suitability_key)
+                    new_suitability_translated = st.selectbox(
+                        t('suitability_question'), 
+                        suitability_options_translated, 
+                        # تحديد الفهرس الافتراضي بشكل صحيح
+                        index=suitability_options_translated.index(default_suitability_translated) if default_suitability_translated in suitability_options_translated else 0,
+                        key=f"edit_suit_{selected_product['id']}"
+                    )
                     
-                    # تحديد الفهرس للـ selectbox
-                    current_index = suitability_options_translated.index(current_translated_value)
+                    st.markdown(f"**الصورة الحالية:**")
+                    try:
+                        st.image(selected_product['image_url'], width=150, caption=selected_product['name'])
+                    except Exception:
+                        st.warning(t('loading_image_error'))
 
-                    new_suitability_translated = st.selectbox(t('suitability_question'), suitability_options_translated, index=current_index)
-                    new_image = st.file_uploader(t('upload_new_image'), type=["png", "jpg", "jpeg"])
+                    new_image = st.file_uploader(t('upload_new_image'), type=["png", "jpg", "jpeg"], key=f"new_img_{selected_product['id']}")
 
                     col1, col2 = st.columns(2)
-                    with col1:
-                        update_button = st.form_submit_button(t('update_product'))
-                    with col2:
-                        delete_button = st.form_submit_button(t('delete_product'))
+                    update_button = col1.form_submit_button(t('update_product'))
+                    delete_button = col2.form_submit_button(t('delete_product'))
 
                     if update_button:
-                        image_url_to_update = selected_product['image_url']
+                        data_to_update = {
+                            "name": new_name,
+                            "calories": new_calories,
+                            "sugar": new_sugar,
+                            "carbs": new_carbs,
+                            "protein": new_protein,
+                            "fats": new_fats,
+                            # تحويل القيمة المترجمة إلى المفتاح الإنجليزي قبل التحديث
+                            "suitability": suitability_options_keys[suitability_options_translated.index(new_suitability_translated)]
+                        }
+
                         if new_image:
                             with st.spinner(t('updating_image_spinner')):
-                                image_url_to_update = upload_image_to_storage(new_image)
-                        
-                        # إعادة القيمة المختارة إلى المفتاح الإنجليزي (الذي يُخزن في DB)
-                        db_suitability_update = suitability_options_keys[suitability_options_translated.index(new_suitability_translated)]
-                        
-                        data_to_update = {
-                            "name": new_name, 
-                            "calories": new_calories, 
-                            "sugar": new_sugar, 
-                            "carbs": new_carbs, 
-                            "protein": new_protein, 
-                            "fats": new_fats, 
-                            "suitability": db_suitability_update
-                        }
-                        if new_image: 
-                            data_to_update["image_url"] = image_url_to_update
-                            
+                                new_image_url = upload_image_to_storage(new_image)
+                                if new_image_url:
+                                    data_to_update["image_url"] = new_image_url
+
                         update_product_in_db(selected_product['id'], data_to_update)
-                        st.rerun()
+                        st.rerun() # إعادة تشغيل الصفحة لعرض التحديث
 
                     if delete_button:
                         delete_product_from_db(selected_product['id'])
-                        st.rerun() 
+                        st.rerun() # إعادة تشغيل الصفحة لإزالة المنتج المحذوف
         else:
             st.info(t('no_products_available'))
     except Exception as e:
         st.error(f"{t('error_loading_products')} {e}")
 
-def show_water_calculator_page():
+def show_water_page():
     st.title(t('water_calc_title'))
-    st.write(t('water_calc_desc'))
-    
-    # نموذج إدخال الوزن والعمر لحساب الهدف
-    with st.form(key="water_goal_form_key"):
-        weight_kg = st.number_input(t('weight_kg'), min_value=15.0, value=70.0, key='water_weight') 
-        age_years = st.number_input(t('age_years'), min_value=5, value=30, key='water_age') 
+    st.markdown(f"*{t('water_calc_desc')}*")
+    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Stay+Hydrated", use_column_width=True)
+
+    # نموذج لحساب الهدف اليومي
+    with st.form(key="water_goal_form"):
+        col_w, col_a = st.columns(2)
+        weight = col_w.number_input(t('weight_kg'), min_value=0, value=70)
+        age = col_a.number_input(t('age_years'), min_value=0, value=30)
         calculate_button = st.form_submit_button(t('calculate'))
-    
-    if calculate_button:
-        if weight_kg < 15 or age_years < 5:
-            st.warning(t('realistic_input_warning'))
-            # إعادة تعيين الهدف إذا كان الإدخال غير صحيح
-            st.session_state['water_goal_liters'] = 0.0 
-        else:
-            # حساب الهدف وتخزينه في حالة الجلسة
-            recommended_liters = calculate_water_intake(weight_kg, age_years)
-            st.session_state['water_goal_liters'] = recommended_liters
-            st.success(f"{t('recommended_intake')} **{recommended_liters:.2f} {t('liters')}**.")
+        
+        if calculate_button:
+            if weight > 15 and age > 5:
+                goal = calculate_water_intake(weight, age)
+                st.session_state['water_goal_liters'] = goal
+                st.success(f"**{t('recommended_intake')}** {goal:.2f} {t('liters')}.")
+            else:
+                st.error(t('realistic_input_warning'))
 
-    # --- شاشة التتبع التفاعلية للماء ---
     st.markdown("---")
-    st.subheader(f"💧 {t('daily_goal')}")
-    
-    # FIX: تعريف المتغيرات المحلية من حالة الجلسة وتجهيزها
-    water_goal_ml = st.session_state.get('water_goal_liters', 0.0) * 1000
-    consumed_ml = st.session_state.get('water_consumed_ml', 0) 
 
-    # حساب نسبة التقدم
-    if water_goal_ml > 0:
-        progress_ratio = min(consumed_ml / water_goal_ml, 1.0) # لا تتجاوز 100%
-        progress_percent = int(progress_ratio * 100)
+    # جزء تتبع الاستهلاك
+    st.subheader(t('current_consumption'))
+    goal = st.session_state.get('water_goal_liters', 0.0)
+    consumed = st.session_state.get('water_consumed_ml', 0) / 1000 # تحويل إلى لتر
+
+    if goal > 0:
+        # عرض التقدم باستخدام شريط تقدم Streamlit
+        progress_percentage = min(1.0, consumed / goal)
+        st.progress(progress_percentage)
+        st.markdown(f"**{t('daily_goal')}:** {consumed:.2f} / {goal:.2f} {t('liters')}")
+
+        if consumed >= goal and goal > 0:
+            st.balloons()
+            st.success(t('goal_reached'))
     else:
-        # إذا لم يتم حساب الهدف بعد أو كان الهدف صفراً
-        progress_ratio = 0.0
-        progress_percent = 0
+        st.info("الرجاء حساب هدفك اليومي أولاً.")
 
-    # عرض التقدم 
-    # FIX: تهريب (\) لضمان عرض الـ LaTeX بشكل صحيح في f-string
-    st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \\text{{ml}} / {water_goal_ml:.0f} \\text{{ml}}$$")
-    st.progress(progress_ratio, text=f"{progress_percent}%")
-
-    if progress_ratio >= 1.0:
-        st.balloons()
-        st.success(t('goal_reached'))
-
-    # أزرار التفاعل
+    # أزرار الإجراءات
     col1, col2 = st.columns(2)
-    
-    # زر إضافة كأس ماء
-    with col1:
-        st.button(t('log_glass'), on_click=log_water_intake, use_container_width=True, type='primary')
-    
-    # زر إعادة التعيين
-    with col2:
-        st.button(t('reset_water'), on_click=reset_water_intake, use_container_width=True)
+    if col1.button(t('log_glass'), key="log_water_btn"):
+        log_water_intake()
+        st.rerun()
 
-    # نصائح عامة (لم تتغير)
+    if col2.button(t('reset_water'), key="reset_water_btn"):
+        reset_water_intake()
+        st.rerun()
+
     st.markdown("---")
-    with st.expander(t('water_tips_title')):
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip1')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip2')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip3')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip4')}")
-
+    st.subheader(t('water_tips_title'))
+    st.info(f"💡 {t('water_tip1')}")
+    st.info(f"💡 {t('water_tip2')}")
+    st.info(f"💡 {t('water_tip3')}")
+    st.info(f"💡 {t('water_tip4')}")
 
 def show_exercise_page():
     st.title(t('exercise_title'))
-    st.write(t('exercise_desc'))
-    st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
-    with st.form(key="exercise_form_key"):
-        age = st.number_input(t('age_years'), min_value=5, value=30) 
-        weight = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
+    st.markdown(f"*{t('exercise_desc')}*")
+    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Active+Lifestyle", use_column_width=True)
+
+    with st.form(key="exercise_rec_form"):
+        col_w, col_a = st.columns(2)
+        weight = col_w.number_input(t('weight_kg'), min_value=0, value=70, key='ex_weight')
+        age = col_a.number_input(t('age_years'), min_value=0, value=30, key='ex_age')
         get_rec_button = st.form_submit_button(t('get_rec'))
-    if get_rec_button:
-        if age < 5 or weight < 15:
-            st.warning(t('realistic_input_warning'))
+
+        if get_rec_button:
+            recommendation = get_exercise_recommendation(age, weight)
+            st.subheader("توصيتنا لك:")
+            if "واقعيين" in recommendation or "reliable" in recommendation: # للتحقق من خطأ الإدخال
+                 st.error(recommendation)
+            else:
+                 st.success(recommendation)
+
+    st.markdown("---")
+    st.subheader(t('exercise_tips_title'))
+    st.info(f"🏃 {t('exercise_tip1')}")
+    st.info(f"🩸 {t('exercise_tip2')}")
+    st.info(f"💧 {t('exercise_tip3')}")
+    st.info(f"🍎 {t('exercise_tip4')}")
+
+# --- دالة التنقل الرئيسية (Main Navigation Function) ---
+
+def main():
+    # إعداد الشريط الجانبي (Sidebar)
+    with st.sidebar:
+        st.title(t('navigation'))
+        
+        # اختيار اللغة (العربية/الإنجليزية)
+        current_lang = st.session_state.get('language', 'ar')
+        
+        # استخدام دالة on_change لتحديث اللغة عند التغيير
+        def set_language():
+            selected_option = st.session_state.get('language_select_key')
+            # استخراج الكود (ar/en) من النص المعروض
+            new_lang_code = 'ar' if 'العربية' in selected_option else 'en'
+            if st.session_state['language'] != new_lang_code:
+                st.session_state['language'] = new_lang_code
+                st.rerun() # إعادة تشغيل التطبيق لعرض اللغة الجديدة
+                
+        st.selectbox(
+            "Language / اللغة",
+            ["العربية (ar)", "English (en)"],
+            index=0 if current_lang == 'ar' else 1,
+            key='language_select_key',
+            on_change=set_language
+        )
+        
+        st.markdown("---")
+
+        # قائمة الصفحات
+        pages = {
+            t('home_page'): show_home_page,
+            t('products_page'): show_products_page,
+            t('water_page'): show_water_page,
+            t('exercise_page'): show_exercise_page
+        }
+        
+        # إضافة صفحة المسؤول فقط إذا كان المستخدم مسجلاً للدخول
+        if st.session_state.get('user'):
+             pages[t('admin_page')] = show_admin_page
+             
+        # عرض حالة المستخدم والصفحة المختارة
+        if st.session_state.get('user'):
+            st.success(f"مرحباً, {st.session_state['user'].email}")
+            st.markdown("---")
+            # زر تسجيل الخروج
+            if st.button(t('logout')):
+                logout_user()
+            
+            # التنقل بين الصفحات للمستخدمين المسجلين
+            page_options = list(pages.keys())
+            # البحث عن القيمة المخزنة، وفي حالة عدم العثور عليها (بسبب تغيير اللغة مثلاً)، العودة إلى 'الرئيسية'
+            default_index = page_options.index(st.session_state.get('page', t('home_page'))) if st.session_state.get('page') in page_options else page_options.index(t('home_page'))
+
+            selected_page = st.radio("القائمة", page_options, index=default_index)
+            st.session_state['page'] = selected_page
+            
         else:
-            st.info(get_exercise_recommendation(age, weight))
-    with st.expander(t('exercise_tips_title')):
-        st.write(f"- **{t('exercise_tip1')}**")
-        st.write(f"- **{t('exercise_tip2')}**")
-        st.write(f"- **{t('exercise_tip3')}**")
-        st.write(f"- **{t('exercise_tip4')}**")
+            # إذا لم يكن المستخدم مسجلاً للدخول، يتم عرض صفحة المصادقة فقط
+            st.session_state['page'] = 'Auth'
+        
+    # عرض محتوى الصفحة
+    if st.session_state.get('page') == 'Auth':
+        show_auth_page()
+    elif st.session_state.get('page'):
+        # استدعاء دالة الصفحة المختارة بناءً على الترجمة
+        page_function = pages.get(st.session_state['page'])
+        if page_function:
+            page_function()
+        else:
+            show_home_page()
+            
+if __name__ == '__main__':
+    main()
 
-# --- منطق التنقل الرئيسي مع اختيار اللغة ---
-st.sidebar.title(t('navigation'))
-
-# قائمة تحديد اللغة
-lang_options = {'العربية': 'ar', 'English': 'en'}
-current_lang_display = 'العربية' if st.session_state['language'] == 'ar' else 'English'
-selected_lang_display = st.sidebar.radio("Language / اللغة", list(lang_options.keys()), index=list(lang_options.keys()).index(current_lang_display))
-
-# إذا تم تغيير اللغة، قم بتحديثها وإعادة التشغيل
-if st.session_state['language'] != lang_options[selected_lang_display]:
-    st.session_state['language'] = lang_options[selected_lang_display]
-    st.rerun()
-
-if st.session_state['user']:
-    # إذا كان المستخدم مسجلاً دخوله، اعرض خيارات التطبيق
-    if st.sidebar.button(t('logout')):
-        logout_user()
-    
-    # تحديد أسماء الصفحات المترجمة
-    page_options = {
-        t('home_page'): show_home_page, 
-        t('products_page'): show_products_page, 
-        t('admin_page'): show_admin_page, 
-        t('water_page'): show_water_calculator_page, 
-        t('exercise_page'): show_exercise_page
-    }
-    
-    # البحث عن الاسم المترجم الحالي للصفحة
-    current_page_func_name = st.session_state['page'].lower() + '_page'
-    current_page_translated_name = next((k for k, v in page_options.items() if v.__name__ == 'show_' + current_page_func_name), t('home_page'))
-
-    # قائمة الـ Radio button تستخدم الأسماء المترجمة
-    page_name_translated = st.sidebar.radio(t('navigation'), list(page_options.keys()), index=list(page_options.keys()).index(current_page_translated_name))
-    
-    # تحديث وتنفيذ الصفحة المختارة
-    for name, func in page_options.items():
-        if name == page_name_translated:
-            # تحديث اسم الصفحة المخزن ليتوافق مع مفتاح الدالة (مثل 'Home')
-            st.session_state['page'] = func.__name__.replace('show_', '').replace('_page', '').capitalize()
-            func()
-            break
-else:
-    # إذا لم يسجل الدخول، اعرض صفحة المصادقة
-    show_auth_page()
