@@ -11,20 +11,31 @@ TRANSLATIONS = {
         'welcome': "مرحباً بك في مساعد السكري الذكي",
         'app_purpose': "تم تصميم هذا التطبيق لمساعدتك في إدارة صحتك.",
         'explore_features': "استخدم قائمة التنقل لاستكشاف الميزات المختلفة.",
-        'login_register': "تسجيل الدخول أو التسجيل (مصادقة OTP)",
-        'otp_note': "ملاحظة: نظام المصادقة هذا يعتمد على إرسال رمز لمرة واحدة (OTP) للإيميل. لا توجد خاصية منفصلة لإعادة تعيين كلمة المرور لأن الرمز الجديد يمنحك الوصول دائماً.",
-        'enter_email': "أدخل بريدك الإلكتروني لاستلام رمز الدخول",
-        'send_code': "إرسال الرمز",
-        'enter_email_warning': "الرجاء إدخال بريدك الإلكتروني.",
-        'code_sent_to': "تم إرسال رمز إلى",
-        'enter_code': "أدخل الرمز من بريدك الإلكتروني",
-        'verify_code': "التحقق من الرمز",
-        'enter_code_warning': "الرجاء إدخال الرمز.",
-        'otp_sent_success': "تم إرسال رمز OTP إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.",
-        'otp_error': "خطأ أثناء إرسال رمز OTP:",
-        'verification_success': "تم التحقق بنجاح! لقد سجلت دخولك الآن.",
-        'otp_invalid': "رمز OTP غير صالح. يرجى المحاولة مرة أخرى.",
-        'verification_error': "خطأ أثناء التحقق من رمز OTP:",
+        'login_register': "تسجيل الدخول أو التسجيل",
+        'otp_note': "ملاحظة: يتم تسجيل الدخول والتسجيل باستخدام البريد الإلكتروني وكلمة المرور. يتم إعادة تعيين كلمة المرور عبر رابط يُرسَل للبريد الإلكتروني.",
+        
+        # مفاتيح المصادقة
+        'enter_email': "البريد الإلكتروني",
+        'password_label': "كلمة المرور (6 أحرف أو أكثر)",
+        'login_button': "تسجيل الدخول",
+        'signup_button': "تسجيل جديد",
+        'forgot_password_button': "نسيت كلمة المرور؟",
+        
+        'enter_email_password_warning': "الرجاء إدخال البريد الإلكتروني وكلمة المرور.",
+        'password_length_error': "خطأ: كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+        
+        'signup_success': "تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.",
+        'signup_error': "خطأ في التسجيل:",
+        
+        'verification_success': "تم تسجيل الدخول بنجاح! لقد سجلت دخولك الآن.",
+        'login_invalid': "بيانات تسجيل الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
+        'verification_error': "خطأ في تسجيل الدخول:",
+        
+        'enter_email_for_reset': "أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+        'send_reset_link_button': "إرسال رابط إعادة التعيين",
+        'password_reset_sent': "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (وقد تجده في البريد غير الهام).",
+        'password_reset_error': "خطأ في إعادة تعيين كلمة المرور:",
+        
         'logout': "تسجيل الخروج",
         'logged_out': "تم تسجيل خروجك.",
         'navigation': "التنقل",
@@ -82,6 +93,14 @@ TRANSLATIONS = {
         'calculate': "احسب",
         'realistic_input_warning': "الرجاء إدخال وزن وعمر واقعيين للحصول على توصية صالحة.",
         'liters': "لتر",
+        
+        # مفاتيح جديدة لخاصية الماء التفاعلية
+        'current_consumption': "استهلاكك الحالي",
+        'daily_goal': "هدفك اليومي",
+        'log_glass': "شربت كأس ماء ($250 \text{ml}$)",
+        'reset_water': "إعادة تعيين الاستهلاك",
+        'goal_reached': "تهانينا! لقد وصلت إلى هدفك اليومي أو تجاوزته! 🥳",
+        
         'exercise_title': "توصيات التمارين",
         'exercise_desc': "اعثر على رياضة مناسبة لك بناءً على عمرك ووزنك.",
         'get_rec': "احصل على توصية",
@@ -105,20 +124,31 @@ TRANSLATIONS = {
         'welcome': "Welcome to the Smart Diabetes Assistant",
         'app_purpose': "This app is designed to help you manage your health.",
         'explore_features': "Use the navigation menu to explore different features.",
-        'login_register': "Login or Register (OTP Auth)",
-        'otp_note': "Note: This authentication system relies on sending a one-time code (OTP) to your email. There is no separate 'Reset Password' feature as requesting a new code always grants access.",
-        'enter_email': "Enter your email to receive a login code",
-        'send_code': "Send Code",
-        'enter_email_warning': "Please enter your email.",
-        'code_sent_to': "A code has been sent to",
-        'enter_code': "Enter the code from your email",
-        'verify_code': "Verify Code",
-        'enter_code_warning': "Please enter the code.",
-        'otp_sent_success': "OTP code sent to your email. Please check your inbox.",
-        'otp_error': "Error sending OTP:",
-        'verification_success': "Verification successful! You are now logged in.",
-        'otp_invalid': "Invalid OTP code. Please try again.",
-        'verification_error': "Error verifying OTP:",
+        'login_register': "Login or Register",
+        'otp_note': "Note: Login and registration are handled using Email and Password. Password reset is handled via a secure link sent to your email.",
+        
+        # New Auth Keys
+        'enter_email': "Email",
+        'password_label': "Password (6 characters or more)",
+        'login_button': "Login",
+        'signup_button': "Sign Up",
+        'forgot_password_button': "Forgot Password?",
+
+        'enter_email_password_warning': "Please enter email and password.",
+        'password_length_error': "Error: Password must be at least 6 characters.",
+
+        'signup_success': "Registration successful! You can now log in.",
+        'signup_error': "Signup Error:",
+
+        'verification_success': "Login successful! You are now logged in.",
+        'login_invalid': "Invalid login credentials. Please check your email and password.",
+        'verification_error': "Login Error:",
+
+        'enter_email_for_reset': "Enter your email to reset password",
+        'send_reset_link_button': "Send Reset Link",
+        'password_reset_sent': "A password reset link has been sent to your email. Please check your inbox (and spam folder).",
+        'password_reset_error': "Error resetting password:",
+
         'logout': "Logout",
         'logged_out': "You have been logged out.",
         'navigation': "Navigation",
@@ -176,6 +206,14 @@ TRANSLATIONS = {
         'calculate': "Calculate",
         'realistic_input_warning': "Please enter a realistic weight (e.g., above 15 kg) and age (e.g., above 5 years) to get a valid recommendation.",
         'liters': "liters",
+        
+        # New keys for interactive water feature
+        'current_consumption': "Current Consumption",
+        'daily_goal': "Daily Goal",
+        'log_glass': "Drank a glass of water ($250 \text{ml}$)",
+        'reset_water': "Reset Consumption",
+        'goal_reached': "Congratulations! You have reached or exceeded your daily goal! 🥳",
+        
         'exercise_title': "Exercise Recommendations",
         'exercise_desc': "Find a sport that's suitable for you based on your age and weight.",
         'get_rec': "Get Recommendation",
@@ -226,14 +264,18 @@ def init_session_state():
     """تهيئة متغيرات حالة الجلسة (Session State)."""
     if 'user' not in st.session_state:
         st.session_state['user'] = None
-    if 'otp_sent' not in st.session_state: # تم استعادة هذه الحالة لمنطق OTP
-        st.session_state['otp_sent'] = False
-    if 'user_email' not in st.session_state:
-        st.session_state['user_email'] = ""
     if 'page' not in st.session_state:
         st.session_state['page'] = 'Home'
     if 'language' not in st.session_state: # حالة اللغة الجديدة
         st.session_state['language'] = 'ar' # الافتراضي: العربية
+    # حالة جديدة لتحديد وضع المصادقة
+    if 'auth_mode' not in st.session_state:
+        st.session_state['auth_mode'] = 'login' 
+    # حالات جديدة لتتبع الماء
+    if 'water_goal_liters' not in st.session_state:
+        st.session_state['water_goal_liters'] = 0.0 # الهدف اليومي باللتر
+    if 'water_consumed_ml' not in st.session_state:
+        st.session_state['water_consumed_ml'] = 0 # الكمية المستهلكة بالمليلتر
 
 # --- الإعداد الرئيسي للتطبيق ---
 supabase = init_supabase_client()
@@ -241,49 +283,62 @@ init_session_state()
 
 # --- دوال المصادقة (Auth Functions) ---
 
-def send_otp(email):
-    """إرسال رمز OTP إلى البريد الإلكتروني لتسجيل الدخول/التسجيل."""
+def sign_up_user(email, password):
+    """تسجيل مستخدم جديد بالبريد الإلكتروني وكلمة المرور."""
     if not supabase: return
     try:
-        # sign_in_with_otp يتعامل مع تسجيل الدخول والتسجيل في نفس الوقت
-        # ملاحظة: هذا يتطلب إعداد Supabase Auth مع تمكين Email OTP.
-        supabase.auth.sign_in_with_otp({"email": email})
-        st.session_state['otp_sent'] = True
-        st.session_state['user_email'] = email
-        st.success(t('otp_sent_success'))
+        # إنشاء المستخدم
+        supabase.auth.sign_up({"email": email, "password": password})
+        st.success(t('signup_success'))
+        # بعد التسجيل الناجح، نعود لوضع تسجيل الدخول
+        st.session_state['auth_mode'] = 'login'
+        st.rerun()
     except Exception as e:
-        st.error(f"{t('otp_error')} {e}")
+        st.error(f"{t('signup_error')} {e}")
 
-def verify_otp(email, token):
-    """التحقق من رمز OTP."""
+def sign_in_user(email, password):
+    """تسجيل دخول المستخدم بالبريد الإلكتروني وكلمة المرور."""
     if not supabase: return
     try:
-        # ملاحظة: نوع المصادقة يجب أن يكون 'email' لـ sign_in_with_otp
-        response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
         
-        # يجب فحص وجود 'user' في استجابة Supabase
-        if hasattr(response, 'user') and response.user:
+        # Supabase يرجع استجابة User object عند النجاح
+        if response.user:
             st.session_state['user'] = response.user
-            st.session_state['otp_sent'] = False
-            st.session_state['user_email'] = ""
             st.session_state['page'] = 'Home'
-            st.success(t('verification_success'))
-            st.rerun() # إعادة تشغيل التطبيق لإظهار واجهة المستخدم الجديدة
+            st.success(t('verification_success')) 
+            st.rerun() 
         else:
-            st.error(t('otp_invalid'))
+            # هذا الجزء قد لا يتحقق عادةً مع sign_in_with_password
+            st.error(t('login_invalid'))
     except Exception as e:
-        st.error(f"{t('verification_error')} {e}")
+        # Supabase يطلق استثناء عند بيانات الاعتماد غير الصحيحة
+        error_message = str(e)
+        if "Invalid login credentials" in error_message or "Invalid login credentials" in error_message:
+             st.error(t('login_invalid'))
+        else:
+            st.error(f"{t('verification_error')} {e}")
+
+def reset_password(email):
+    """إرسال رابط إعادة تعيين كلمة المرور."""
+    if not supabase: return
+    try:
+        # إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني
+        supabase.auth.reset_password_for_email(email)
+        st.success(t('password_reset_sent'))
+    except Exception as e:
+        st.error(f"{t('password_reset_error')} {e}")
 
 def logout_user():
+    """تسجيل خروج المستخدم ومسح حالة الجلسة."""
     if not supabase: return
     try:
         supabase.auth.sign_out()
         st.session_state['user'] = None
-        st.session_state['otp_sent'] = False
-        st.session_state['user_email'] = ""
         st.session_state['page'] = 'Home'
+        st.session_state['auth_mode'] = 'login' # إرجاع لوضع الدخول
         st.info(t('logged_out'))
-        st.rerun() # إعادة تشغيل التطبيق بعد تسجيل الخروج
+        st.rerun() 
     except Exception as e:
         st.error(f"Error during logout: {e}")
 
@@ -296,7 +351,6 @@ def upload_image_to_storage(image_file):
         # إنشاء اسم ملف فريد باستخدام UUID
         file_extension = image_file.name.split(".")[-1]
         file_name = f"{uuid.uuid4()}.{file_extension}"
-        # **هام:** يجب التأكد من إنشاء bucket بنفس هذا الاسم في لوحة تحكم Supabase Storage
         bucket_name = "product_images" 
 
         # قراءة محتوى الملف
@@ -340,11 +394,13 @@ def delete_product_from_db(product_id):
     except Exception as e:
         st.error(f"{t('product_deleted_failed')} {e}")
 
-# --- دوال حاسبة المياه (Water Calculator Functions) ---
+# --- دوال حاسبة المياه والرياضة (Calculator and Exercise Functions) ---
+
+# حجم الكأس الواحد بالمليلتر
+GLASS_VOLUME_ML = 250
 
 def calculate_water_intake(weight_kg, age_years):
-    # تم تحديد قيود أكثر واقعية هنا (للأطفال أو البالغين الأصحاء)
-    if weight_kg <= 15 or age_years <= 5: # الحد الأدنى المنطقي
+    if weight_kg <= 15 or age_years <= 5: 
         return 0 
         
     if 18 <= age_years <= 30:
@@ -355,9 +411,7 @@ def calculate_water_intake(weight_kg, age_years):
         recommended_ml = weight_kg * 25
     return recommended_ml / 1000
 
-# --- دوال صفحة الرياضة ---
 def get_exercise_recommendation(age, weight):
-    # تم تحديد قيود أكثر واقعية هنا
     if age <= 5 or weight <= 15:
         return t('rec_realistic_input')
         
@@ -371,36 +425,83 @@ def get_exercise_recommendation(age, weight):
     else:
         return t('rec_over_40')
 
+# --- دوال تحديث حالة الماء التفاعلية ---
+
+def log_water_intake():
+    """تضيف كأس ماء (250 مل) إلى الاستهلاك الحالي."""
+    st.session_state['water_consumed_ml'] += GLASS_VOLUME_ML
+
+def reset_water_intake():
+    """تعيد تعيين الاستهلاك الحالي للماء إلى الصفر."""
+    st.session_state['water_consumed_ml'] = 0
+
+
 # --- صفحات التطبيق (App Pages) ---
 
 def show_auth_page():
     st.title(t('login_register'))
+    st.markdown(f"*{t('otp_note')}*") 
+
+    # أزرار التبديل بين الأوضاع
+    cols = st.columns(3)
     
-    # رسالة توضيحية لعملية المصادقة الحالية
-    st.markdown(f"*{t('otp_note')}*")
+    # تحديث وضع المصادقة عند الضغط على الزر
+    if cols[0].button(t('login_button'), key='auth_login_btn'):
+        st.session_state['auth_mode'] = 'login'
+    if cols[1].button(t('signup_button'), key='auth_signup_btn'):
+        st.session_state['auth_mode'] = 'signup'
+    if cols[2].button(t('forgot_password_button'), key='auth_reset_btn'):
+        st.session_state['auth_mode'] = 'reset'
+
+    st.markdown("---")
     
-    if not st.session_state['otp_sent']:
-        with st.form(key="send_otp_form_key"):
-            email = st.text_input(t('enter_email'))
-            submit_button = st.form_submit_button(t('send_code'))
-            if submit_button and email:
-                send_otp(email)
-            elif submit_button:
-                st.warning(t('enter_email_warning'))
-    else:
-        with st.form(key="verify_otp_form_key"):
-            st.write(f"**{t('code_sent_to')}** {st.session_state['user_email']}")
-            token = st.text_input(t('enter_code'))
-            submit_button = st.form_submit_button(t('verify_code'))
-            if submit_button and token:
-                verify_otp(st.session_state['user_email'], token)
-            elif submit_button:
-                st.warning(t('enter_code_warning'))
+    # --- نموذج تسجيل الدخول (Login Form) ---
+    if st.session_state['auth_mode'] == 'login':
+        st.subheader(t('login_button'))
+        with st.form(key="login_form_key"):
+            email = st.text_input(t('enter_email'), key='login_email')
+            password = st.text_input(t('password_label'), type='password', key='login_password')
+            submit_button = st.form_submit_button(t('login_button'))
+            
+            if submit_button:
+                if email and password:
+                    sign_in_user(email, password)
+                else:
+                    st.warning(t('enter_email_password_warning'))
+
+    # --- نموذج التسجيل (Signup Form) ---
+    elif st.session_state['auth_mode'] == 'signup':
+        st.subheader(t('signup_button'))
+        with st.form(key="signup_form_key"):
+            email = st.text_input(t('enter_email'), key='signup_email')
+            password = st.text_input(t('password_label'), type='password', key='signup_password')
+            submit_button = st.form_submit_button(t('signup_button'))
+            
+            if submit_button:
+                if email and password:
+                    if len(password) < 6:
+                        st.error(t('password_length_error'))
+                    else:
+                        sign_up_user(email, password)
+                else:
+                    st.warning(t('enter_email_password_warning'))
+
+    # --- نموذج نسيت كلمة المرور (Forgot Password Form) ---
+    elif st.session_state['auth_mode'] == 'reset':
+        st.subheader(t('forgot_password_button'))
+        with st.form(key="reset_form_key"):
+            email = st.text_input(t('enter_email_for_reset'), key='reset_email')
+            submit_button = st.form_submit_button(t('send_reset_link_button'))
+            
+            if submit_button:
+                if email:
+                    reset_password(email)
+                else:
+                    st.warning(t('enter_email_warning'))
 
 def show_home_page():
     st.title(t('welcome'))
     
-    # **تم تعديل هذا الرابط:** استخدام رابط ثابت للمربع الأخضر كخلفية لعدم الاعتماد على النص العربي في الصورة.
     st.image(f"https://placehold.co/800x200/50C878/FFFFFF?text=Diabetes+Assistant", caption=t('app_title'), use_column_width=True)
     
     st.write(t('app_purpose'))
@@ -418,13 +519,13 @@ def show_products_page():
         products = query.execute().data
         if products:
             for product in products:
-                # ترجمة مفتاح الملائمة المخزن في قاعدة البيانات (مثل 'suitable') إلى اللغة الحالية
-                suitability_key = product['suitability'].lower().replace(" ", "_")
-                suitability_text = TRANSLATIONS.get(st.session_state.get('language', 'ar'), {}).get(suitability_key, suitability_key) 
+                # ترجمة مفتاح الملائمة المخزن في قاعدة البيانات
+                suitability_keys = ['suitable', 'moderately_suitable', 'not_suitable']
+                suitability_key_lookup = {key: t(key) for key in suitability_keys}
+                suitability_text = suitability_key_lookup.get(product.get('suitability', 'not_suitable'), product.get('suitability', 'غير معروف'))
                 
                 st.subheader(f"{product['name']} - {t('suitability_label')}: {suitability_text}")
                 
-                # استخدام try-except للتحكم في فشل تحميل الصورة
                 try:
                     st.image(product['image_url'], width=200)
                 except Exception:
@@ -498,7 +599,7 @@ def show_edit_delete_form():
                 suitability_options_translated = [t(key) for key in suitability_options_keys]
                 
                 with st.form(key="edit_product_form_key"):
-                    st.image(selected_product.get('image_url', 'https://placehold.co/200x200'), width=200) # إضافة رابط بلايس هولدر احتياطي
+                    st.image(selected_product.get('image_url', 'https://placehold.co/200x200'), width=200) 
                     
                     new_name = st.text_input(t('product_name'), value=selected_product['name'])
                     new_calories = st.number_input(t('calories'), value=selected_product['calories'], min_value=0)
@@ -554,7 +655,7 @@ def show_edit_delete_form():
 
                     if delete_button:
                         delete_product_from_db(selected_product['id'])
-                        st.rerun() # إعادة تشغيل التطبيق لعرض القائمة المحدثة
+                        st.rerun() 
         else:
             st.info(t('no_products_available'))
     except Exception as e:
@@ -563,22 +664,65 @@ def show_edit_delete_form():
 def show_water_calculator_page():
     st.title(t('water_calc_title'))
     st.write(t('water_calc_desc'))
-    st.image("https://placehold.co/600x200/ADD8E6/000000?text=Stay+Hydrated")
+    
+    # نموذج إدخال الوزن والعمر لحساب الهدف
+    with st.form(key="water_goal_form_key"):
+        weight_kg = st.number_input(t('weight_kg'), min_value=15.0, value=70.0, key='water_weight') 
+        age_years = st.number_input(t('age_years'), min_value=5, value=30, key='water_age') 
+        calculate_button = st.form_submit_button(t('calculate'))
+    
+    if calculate_button:
+        if weight_kg < 15 or age_years < 5:
+            st.warning(t('realistic_input_warning'))
+            st.session_state['water_goal_liters'] = 0.0 # إعادة تعيين الهدف إذا كان الإدخال غير صحيح
+        else:
+            # حساب الهدف وتخزينه في حالة الجلسة
+            recommended_liters = calculate_water_intake(weight_kg, age_years)
+            st.session_state['water_goal_liters'] = recommended_liters
+            st.success(f"{t('recommended_intake')} **{recommended_liters:.2f} {t('liters')}**.")
+
+    # --- شاشة التتبع التفاعلية للماء ---
+    st.markdown("---")
+    st.subheader(f"💧 {t('daily_goal')}")
+
+    water_goal_ml = st.session_state['water_goal_liters'] * 1000
+    consumed_ml = st.session_state['water_consumed_ml']
+    
+    # حساب نسبة التقدم
+    if water_goal_ml > 0:
+        progress_ratio = min(consumed_ml / water_goal_ml, 1.0) # لا تتجاوز 100%
+        progress_percent = int(progress_ratio * 100)
+    else:
+        # إذا لم يتم حساب الهدف بعد
+        progress_ratio = 0.0
+        progress_percent = 0
+
+    # عرض التقدم
+    st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \text{ml} / {water_goal_ml:.0f} \text{ml}$$")
+    st.progress(progress_ratio, text=f"{progress_percent}%")
+
+    if progress_ratio >= 1.0:
+        st.balloons()
+        st.success(t('goal_reached'))
+
+    # أزرار التفاعل
+    col1, col2 = st.columns(2)
+    
+    # زر إضافة كأس ماء
+    with col1:
+        st.button(t('log_glass'), on_click=log_water_intake, use_container_width=True, type='primary')
+    
+    # زر إعادة التعيين
+    with col2:
+        st.button(t('reset_water'), on_click=reset_water_intake, use_container_width=True)
+
+    # نصائح عامة (لم تتغير)
+    st.markdown("---")
     with st.expander(t('water_tips_title')):
         st.write(f"- **{t('water_tips_title')}:** {t('water_tip1')}")
         st.write(f"- **{t('water_tips_title')}:** {t('water_tip2')}")
         st.write(f"- **{t('water_tips_title')}:** {t('water_tip3')}")
         st.write(f"- **{t('water_tips_title')}:** {t('water_tip4')}")
-    with st.form(key="water_form_key"):
-        weight_kg = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
-        age_years = st.number_input(t('age_years'), min_value=5, value=30) 
-        calculate_button = st.form_submit_button(t('calculate'))
-    if calculate_button:
-        if weight_kg < 15 or age_years < 5:
-            st.warning(t('realistic_input_warning'))
-        else:
-            recommended_liters = calculate_water_intake(weight_kg, age_years)
-            st.success(f"{t('recommended_intake')} **{recommended_liters:.2f} {t('liters')}**.")
 
 
 def show_exercise_page():
@@ -627,13 +771,9 @@ if st.session_state['user']:
         t('exercise_page'): show_exercise_page
     }
     
-    # قائمة بأسماء الدوال (المفاتيح غير المترجمة)
-    page_function_names = {func.__name__.replace('show_', '').replace('_page', '').capitalize(): func for func in page_options.values()}
-    
     # البحث عن الاسم المترجم الحالي للصفحة
-    # هذا يضمن أننا نستخدم الاسم المترجم الصحيح للصفحة المخزنة في الجلسة (e.g., 'Home')
-    current_page_func = page_function_names.get(st.session_state['page'], show_home_page)
-    current_page_translated_name = [k for k, v in page_options.items() if v == current_page_func][0]
+    current_page_func_name = st.session_state['page'].lower() + '_page'
+    current_page_translated_name = next((k for k, v in page_options.items() if v.__name__ == 'show_' + current_page_func_name), t('home_page'))
 
     # قائمة الـ Radio button تستخدم الأسماء المترجمة
     page_name_translated = st.sidebar.radio(t('navigation'), list(page_options.keys()), index=list(page_options.keys()).index(current_page_translated_name))
@@ -648,4 +788,3 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
-
