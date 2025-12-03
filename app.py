@@ -812,7 +812,7 @@ def show_exercise_page():
     st.write(t('exercise_desc'))
     
     # هذا هو السطر الصحيح (كل شيء في سطر واحد):
-    st.image("https://picsum.photos/600/200", caption=t('exercise_title'), use_column_width=True) 
+    st.image("https://images.unsplash.com/photo-1541534741688-60cab00e7041?q=80&w=2938&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", caption=t('exercise_title'), use_column_width=True) 
     
     with st.form(key="exercise_form_key"):
         age = st.number_input(t('age_years'), min_value=5, value=30) 
@@ -873,6 +873,7 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
+
 
 
 
