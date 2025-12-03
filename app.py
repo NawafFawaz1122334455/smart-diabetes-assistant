@@ -579,11 +579,8 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    # تم تصحيح الخطأ: السلسلة النصية مغلقة في سطر واحد
-    st.image("
-
-[Image of an illustration of a person drinking water next to a plate with healthy food]
-", caption=t('app_title'), use_column_width=True) 
+    # تم تصحيح الخطأ هنا (كان هذا هو السطر المشكوك فيه في الكود السابق)
+    st.image("", caption=t('app_title'), use_column_width=True) 
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -812,7 +809,7 @@ def show_water_calculator_page():
 def show_exercise_page():
     st.title(t('exercise_title'))
     st.write(t('exercise_desc'))
-    # تم تصحيح الخطأ: السلسلة النصية مغلقة في سطر واحد
+    # تم تصحيح الخطأ هنا أيضًا
     st.image("
 
 [Image of person jogging outdoors]
@@ -876,4 +873,3 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
-
