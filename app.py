@@ -616,7 +616,7 @@ def show_products_page():
 def show_admin_page():
     st.title(t('admin_dashboard'))
     admin_password = st.text_input(t('admin_password'), type="password")
-    SECRET_CODE = "Nn1122334455"
+    SECRET_CODE = "admin123"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -756,9 +756,9 @@ def show_water_calculator_page():
     st.markdown("---")
     st.subheader(f"💧 {t('daily_goal')}")
     
-    # الحصول على الهدف والاستهلاك الحالي بأمان
+    # FIX: تعريف المتغيرات المحلية من حالة الجلسة وتجهيزها
     water_goal_ml = st.session_state.get('water_goal_liters', 0.0) * 1000
-    consumed_ml = st.session_state.get('water_consumed_ml', 0) # يتم الحصول على القيمة من حالة الجلسة
+    consumed_ml = st.session_state.get('water_consumed_ml', 0) 
 
     # حساب نسبة التقدم
     if water_goal_ml > 0:
@@ -770,8 +770,8 @@ def show_water_calculator_page():
         progress_percent = 0
 
     # عرض التقدم 
-    # يتم استخدام consumed_ml من حالة الجلسة، وهو آمن ومُعرَّف دائماً بفضل init_session_state
-    st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \text{ml} / {water_goal_ml:.0f} \text{ml}$$")
+    # FIX: تهريب (\) لضمان عرض الـ LaTeX بشكل صحيح في f-string
+    st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \\text{{ml}} / {water_goal_ml:.0f} \\text{{ml}}$$")
     st.progress(progress_ratio, text=f"{progress_percent}%")
 
     if progress_ratio >= 1.0:
