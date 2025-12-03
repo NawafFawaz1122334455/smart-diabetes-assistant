@@ -1,8 +1,8 @@
+import streamlit as st
 import os
 import uuid
 from supabase import create_client, Client
 from dotenv import load_dotenv
-
 # --- بيانات الترجمة (Translation Data) ---
 TRANSLATIONS = {
     'ar': {
@@ -918,3 +918,4 @@ if st.session_state['user']:
             break
 else:
     show_auth_page()
+
