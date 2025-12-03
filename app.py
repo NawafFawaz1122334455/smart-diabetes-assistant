@@ -12,7 +12,7 @@ TRANSLATIONS = {
         'app_purpose': "تم تصميم هذا التطبيق لمساعدتك في إدارة صحتك.",
         'explore_features': "استخدم قائمة التنقل لاستكشاف الميزات المختلفة.",
         'login_register': "تسجيل الدخول أو التسجيل",
-        'otp_note': "ملاحظة: يتم تسجيل الدخول والتسجيل باستخدام البريد الإلكتروني وكلمة المرور. يتم إعادة تعيين كلمة المرور عبر رابط يُرسَل للبريد الإلكتروني.",
+        'otp_note': "ملاحظة: يتم تسجيل الدخول والتسجيل باستخدام البريد الإلكتروني وكلمة المرور ورمز التحقق (OTP).",
         
         # مفاتيح المصادقة
         'enter_email': "البريد الإلكتروني",
@@ -24,7 +24,7 @@ TRANSLATIONS = {
         'enter_email_password_warning': "الرجاء إدخال البريد الإلكتروني وكلمة المرور.",
         'password_length_error': "خطأ: كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
         
-        'signup_success': "تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.",
+        'signup_success': "تم التسجيل بنجاح! يرجى الآن تسجيل الدخول (سيُطلب منك رمز تحقق).",
         'signup_error': "خطأ في التسجيل:",
         
         'verification_success': "تم تسجيل الدخول بنجاح! لقد سجلت دخولك الآن.",
@@ -33,9 +33,18 @@ TRANSLATIONS = {
         
         'enter_email_for_reset': "أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور",
         'send_reset_link_button': "إرسال رابط إعادة التعيين",
-        'password_reset_sent': "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (وقد تجده في البريد غير الهام).",
+        'password_reset_sent': "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. **ملاحظة: يجب تفعيل إعادة التعيين عبر البريد الإلكتروني في إعدادات Supabase.**",
         'password_reset_error': "خطأ في إعادة تعيين كلمة المرور:",
         
+        # مفاتيح OTP الجديدة
+        'verify_otp_title': "التحقق بخطوتين (OTP)",
+        'otp_sent_info': "تم إرسال رمز تحقق مكون من 6 أرقام إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (وقد تجده في البريد غير الهام).",
+        'enter_otp': "أدخل رمز التحقق (OTP)",
+        'verify_otp_button': "تحقق من الرمز",
+        'otp_invalid': "رمز التحقق غير صحيح أو انتهت صلاحيته.",
+        'otp_error': "خطأ في التحقق من الرمز:",
+        
+        # مفاتيح عامة
         'logout': "تسجيل الخروج",
         'logged_out': "تم تسجيل خروجك.",
         'navigation': "التنقل",
@@ -93,14 +102,11 @@ TRANSLATIONS = {
         'calculate': "احسب",
         'realistic_input_warning': "الرجاء إدخال وزن وعمر واقعيين للحصول على توصية صالحة.",
         'liters': "لتر",
-        
-        # مفاتيح جديدة لخاصية الماء التفاعلية
         'current_consumption': "استهلاكك الحالي",
         'daily_goal': "هدفك اليومي",
         'log_glass': "شربت كأس ماء ($250 \text{ml}$)",
         'reset_water': "إعادة تعيين الاستهلاك",
         'goal_reached': "تهانينا! لقد وصلت إلى هدفك اليومي أو تجاوزته! 🥳",
-        
         'exercise_title': "توصيات التمارين",
         'exercise_desc': "اعثر على رياضة مناسبة لك بناءً على عمرك ووزنك.",
         'get_rec': "احصل على توصية",
@@ -125,7 +131,7 @@ TRANSLATIONS = {
         'app_purpose': "This app is designed to help you manage your health.",
         'explore_features': "Use the navigation menu to explore different features.",
         'login_register': "Login or Register",
-        'otp_note': "Note: Login and registration are handled using Email and Password. Password reset is handled via a secure link sent to your email.",
+        'otp_note': "Note: Login and registration are handled using Email, Password, and a One-Time Password (OTP) for verification.",
         
         # New Auth Keys
         'enter_email': "Email",
@@ -137,18 +143,27 @@ TRANSLATIONS = {
         'enter_email_password_warning': "Please enter email and password.",
         'password_length_error': "Error: Password must be at least 6 characters.",
 
-        'signup_success': "Registration successful! You can now log in.",
+        'signup_success': "Registration successful! Please proceed to login (OTP will be required).",
         'signup_error': "Signup Error:",
 
         'verification_success': "Login successful! You are now logged in.",
         'login_invalid': "Invalid login credentials. Please check your email and password.",
         'verification_error': "Login Error:",
-
+        
         'enter_email_for_reset': "Enter your email to reset password",
         'send_reset_link_button': "Send Reset Link",
-        'password_reset_sent': "A password reset link has been sent to your email. Please check your inbox (and spam folder).",
+        'password_reset_sent': "A password reset link has been sent to your email. **Note: Email reset must be enabled in Supabase settings.**",
         'password_reset_error': "Error resetting password:",
-
+        
+        # New OTP Keys
+        'verify_otp_title': "Two-Factor Verification (OTP)",
+        'otp_sent_info': "A 6-digit verification code has been sent to your email. Please check your inbox (and spam folder).",
+        'enter_otp': "Enter OTP Code",
+        'verify_otp_button': "Verify Code",
+        'otp_invalid': "Invalid or expired OTP code.",
+        'otp_error': "OTP Verification Error:",
+        
+        # General Keys
         'logout': "Logout",
         'logged_out': "You have been logged out.",
         'navigation': "Navigation",
@@ -206,14 +221,11 @@ TRANSLATIONS = {
         'calculate': "Calculate",
         'realistic_input_warning': "Please enter a realistic weight (e.g., above 15 kg) and age (e.g., above 5 years) to get a valid recommendation.",
         'liters': "liters",
-        
-        # New keys for interactive water feature
         'current_consumption': "Current Consumption",
         'daily_goal': "Daily Goal",
         'log_glass': "Drank a glass of water ($250 \text{ml}$)",
         'reset_water': "Reset Consumption",
         'goal_reached': "Congratulations! You have reached or exceeded your daily goal! 🥳",
-        
         'exercise_title': "Exercise Recommendations",
         'exercise_desc': "Find a sport that's suitable for you based on your age and weight.",
         'get_rec': "Get Recommendation",
@@ -271,6 +283,9 @@ def init_session_state():
     # حالة جديدة لتحديد وضع المصادقة
     if 'auth_mode' not in st.session_state:
         st.session_state['auth_mode'] = 'login' 
+    # حالة لتخزين البريد الإلكتروني مؤقتاً أثناء التحقق من OTP
+    if 'temp_email' not in st.session_state:
+        st.session_state['temp_email'] = None 
     # حالات جديدة لتتبع الماء
     if 'water_goal_liters' not in st.session_state:
         st.session_state['water_goal_liters'] = 0.0 # الهدف اليومي باللتر
@@ -288,44 +303,77 @@ def sign_up_user(email, password):
     if not supabase: return
     try:
         # إنشاء المستخدم
+        # ملاحظة: Supabase يرسل تلقائياً رابط تأكيد عند التسجيل
         supabase.auth.sign_up({"email": email, "password": password})
         st.success(t('signup_success'))
         # بعد التسجيل الناجح، نعود لوضع تسجيل الدخول
         st.session_state['auth_mode'] = 'login'
+        st.session_state['temp_email'] = email # لتسهيل الانتقال لنموذج الدخول
         st.rerun()
     except Exception as e:
         st.error(f"{t('signup_error')} {e}")
 
 def sign_in_user(email, password):
-    """تسجيل دخول المستخدم بالبريد الإلكتروني وكلمة المرور."""
+    """تسجيل دخول المستخدم بكلمة المرور، ثم الانتقال لخطوة OTP."""
     if not supabase: return
     try:
+        # 1. التحقق من كلمة المرور
         response = supabase.auth.sign_in_with_password({"email": email, "password": password})
         
-        # Supabase يرجع استجابة User object عند النجاح
         if response.user:
-            st.session_state['user'] = response.user
-            st.session_state['page'] = 'Home'
-            st.success(t('verification_success')) 
+            # 2. إذا نجح التحقق: نقوم بتسجيل الخروج فوراً (لتدمير الجلسة مؤقتاً)
+            # ثم ننتقل إلى وضع التحقق بخطوتين (OTP)
+            supabase.auth.sign_out() 
+            st.session_state['temp_email'] = email
+            st.session_state['auth_mode'] = 'otp_verify'
+            
+            # نرسل رمز التحقق (OTP) للتحقق النهائي
+            # نستخدم sign_in_with_otp فقط لإرسال الرمز، حتى لو كنا قد تحققنا من كلمة المرور
+            supabase.auth.sign_in_with_otp({"email": email}) 
             st.rerun() 
         else:
-            # هذا الجزء قد لا يتحقق عادةً مع sign_in_with_password
             st.error(t('login_invalid'))
     except Exception as e:
-        # Supabase يطلق استثناء عند بيانات الاعتماد غير الصحيحة
         error_message = str(e)
-        if "Invalid login credentials" in error_message or "Invalid login credentials" in error_message:
+        # محاولة تحديد إذا كان الخطأ متعلقاً ببيانات الاعتماد
+        if "Invalid login credentials" in error_message or "Invalid login credentials" in error_message or "AuthApiError" in error_message:
              st.error(t('login_invalid'))
         else:
             st.error(f"{t('verification_error')} {e}")
 
+def verify_otp_code(email, token):
+    """التحقق من رمز OTP وإكمال تسجيل الدخول."""
+    if not supabase: return
+    try:
+        # استخدام verify_otp لإكمال تدفق المصادقة
+        response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
+        
+        if response.user:
+            st.session_state['user'] = response.user
+            st.session_state['page'] = 'Home'
+            st.session_state['temp_email'] = None
+            st.success(t('verification_success')) 
+            st.rerun() 
+        else:
+            st.error(t('otp_invalid'))
+            
+    except Exception as e:
+        error_message = str(e)
+        if "Invalid" in error_message or "invalid" in error_message or "AuthApiError" in error_message:
+            st.error(t('otp_invalid'))
+        else:
+            st.error(f"{t('otp_error')} {e}")
+
+# --- تم تصحيح هذه الدالة لضمان عمل خاصية "نسيت كلمة المرور" ---
 def reset_password(email):
     """إرسال رابط إعادة تعيين كلمة المرور."""
     if not supabase: return
     try:
-        # إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني
+        # استخدام الدالة الصحيحة لإرسال رابط إعادة التعيين
+        # يجب أن يكون هذا الإجراء ممكناً في إعدادات Supabase/Auth/Email
         supabase.auth.reset_password_for_email(email)
         st.success(t('password_reset_sent'))
+        st.session_state['auth_mode'] = 'login' # العودة لنموذج الدخول بعد الإرسال
     except Exception as e:
         st.error(f"{t('password_reset_error')} {e}")
 
@@ -337,6 +385,7 @@ def logout_user():
         st.session_state['user'] = None
         st.session_state['page'] = 'Home'
         st.session_state['auth_mode'] = 'login' # إرجاع لوضع الدخول
+        st.session_state['temp_email'] = None 
         st.info(t('logged_out'))
         st.rerun() 
     except Exception as e:
@@ -429,7 +478,8 @@ def get_exercise_recommendation(age, weight):
 
 def log_water_intake():
     """تضيف كأس ماء (250 مل) إلى الاستهلاك الحالي."""
-    st.session_state['water_consumed_ml'] += GLASS_VOLUME_ML
+    # نستخدم .get للحصول على القيمة الحالية مع قيمة افتراضية صفر في حال عدم وجودها
+    st.session_state['water_consumed_ml'] = st.session_state.get('water_consumed_ml', 0) + GLASS_VOLUME_ML
 
 def reset_water_intake():
     """تعيد تعيين الاستهلاك الحالي للماء إلى الصفر."""
@@ -455,11 +505,31 @@ def show_auth_page():
 
     st.markdown("---")
     
+    # --- نموذج التحقق بخطوتين (OTP Verification Form) ---
+    if st.session_state['auth_mode'] == 'otp_verify' and st.session_state['temp_email']:
+        email_to_verify = st.session_state['temp_email']
+        st.subheader(t('verify_otp_title'))
+        st.info(t('otp_sent_info'))
+        
+        with st.form(key="otp_verify_form_key"):
+            st.markdown(f"**التحقق لـ:** `{email_to_verify}`")
+            otp_code = st.text_input(t('enter_otp'), max_chars=6, key='otp_input')
+            submit_button = st.form_submit_button(t('verify_otp_button'))
+            
+            if submit_button:
+                if otp_code:
+                    verify_otp_code(email_to_verify, otp_code)
+                else:
+                    st.warning(t('otp_invalid'))
+
+
     # --- نموذج تسجيل الدخول (Login Form) ---
-    if st.session_state['auth_mode'] == 'login':
+    elif st.session_state['auth_mode'] == 'login':
         st.subheader(t('login_button'))
+        # استخدام البريد الإلكتروني المؤقت كقيمة افتراضية إذا كان موجوداً
+        default_email = st.session_state['temp_email'] if st.session_state['temp_email'] else ""
         with st.form(key="login_form_key"):
-            email = st.text_input(t('enter_email'), key='login_email')
+            email = st.text_input(t('enter_email'), key='login_email', value=default_email)
             password = st.text_input(t('password_label'), type='password', key='login_password')
             submit_button = st.form_submit_button(t('login_button'))
             
@@ -546,7 +616,7 @@ def show_products_page():
 def show_admin_page():
     st.title(t('admin_dashboard'))
     admin_password = st.text_input(t('admin_password'), type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "Nn1122334455"
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -674,7 +744,8 @@ def show_water_calculator_page():
     if calculate_button:
         if weight_kg < 15 or age_years < 5:
             st.warning(t('realistic_input_warning'))
-            st.session_state['water_goal_liters'] = 0.0 # إعادة تعيين الهدف إذا كان الإدخال غير صحيح
+            # إعادة تعيين الهدف إذا كان الإدخال غير صحيح
+            st.session_state['water_goal_liters'] = 0.0 
         else:
             # حساب الهدف وتخزينه في حالة الجلسة
             recommended_liters = calculate_water_intake(weight_kg, age_years)
@@ -684,20 +755,22 @@ def show_water_calculator_page():
     # --- شاشة التتبع التفاعلية للماء ---
     st.markdown("---")
     st.subheader(f"💧 {t('daily_goal')}")
-
-    water_goal_ml = st.session_state['water_goal_liters'] * 1000
-    consumed_ml = st.session_state['water_consumed_ml']
     
+    # الحصول على الهدف والاستهلاك الحالي بأمان
+    water_goal_ml = st.session_state.get('water_goal_liters', 0.0) * 1000
+    consumed_ml = st.session_state.get('water_consumed_ml', 0) # يتم الحصول على القيمة من حالة الجلسة
+
     # حساب نسبة التقدم
     if water_goal_ml > 0:
         progress_ratio = min(consumed_ml / water_goal_ml, 1.0) # لا تتجاوز 100%
         progress_percent = int(progress_ratio * 100)
     else:
-        # إذا لم يتم حساب الهدف بعد
+        # إذا لم يتم حساب الهدف بعد أو كان الهدف صفراً
         progress_ratio = 0.0
         progress_percent = 0
 
-    # عرض التقدم
+    # عرض التقدم 
+    # يتم استخدام consumed_ml من حالة الجلسة، وهو آمن ومُعرَّف دائماً بفضل init_session_state
     st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \text{ml} / {water_goal_ml:.0f} \text{ml}$$")
     st.progress(progress_ratio, text=f"{progress_percent}%")
 
