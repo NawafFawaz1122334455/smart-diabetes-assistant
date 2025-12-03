@@ -579,8 +579,9 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    # تم تصحيح الخطأ هنا (كان هذا هو السطر المشكوك فيه في الكود السابق)
-    st.image("", caption=t('app_title'), use_column_width=True) 
+    # هذا هو السطر الذي يجب أن يكون في ملفك:
+    st.image("[Image of an illustration of a person drinking water next to a plate with healthy food]
+", caption=t('app_title'), use_column_width=True) 
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -806,20 +807,13 @@ def show_water_calculator_page():
         st.write(f"- **{t('water_tip4')}**")
 
 
-def show_home_page():
-    st.title(t('welcome'))
+def show_exercise_page():
+    st.title(t('exercise_title'))
+    st.write(t('exercise_desc'))
     
-    # **تأكد من هذا السطر أيضًا:** يجب أن يكون مكتوبًا في سطر واحد
-    st.image("
-
-[Image of an illustration of a person drinking water next to a plate with healthy food]
-", caption=t('app_title'), use_column_width=True) 
+    # هذا هو السطر الصحيح (كل شيء في سطر واحد):
+    st.image("", caption=t('exercise_title'), use_column_width=True) 
     
-    st.write(t('app_purpose'))
-# ... (بقية الدالة)
-
-[Image of person jogging outdoors]
-", caption=t('exercise_title'), use_column_width=True) 
     with st.form(key="exercise_form_key"):
         age = st.number_input(t('age_years'), min_value=5, value=30) 
         weight = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
@@ -879,4 +873,3 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
-
