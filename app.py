@@ -19,7 +19,7 @@ TRANSLATIONS = {
         'password_label': "كلمة المرور (6 أحرف أو أكثر)",
         'login_button': "تسجيل الدخول",
         'signup_button': "تسجيل جديد",
-        'forgot_password_button': "نسيت كلمة المرور؟",
+        'forgot_password_button': "نسيت كلمة المرور؟ (دخول مؤقت)",
         
         'enter_email_password_warning': "الرجاء إدخال البريد الإلكتروني وكلمة المرور.",
         'password_length_error': "خطأ: كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
@@ -31,8 +31,8 @@ TRANSLATIONS = {
         'login_invalid': "بيانات تسجيل الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
         'verification_error': "خطأ في تسجيل الدخول:",
         
-        'enter_email_for_reset': "أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور",
-        'send_reset_link_button': "إرسال رابط إعادة التعيين",
+        'enter_email_for_reset': "أدخل بريدك الإلكتروني لإرسال رمز التحقق لمرة واحدة (OTP)",
+        'send_reset_link_button': "إرسال رمز التحقق",
         'password_reset_sent': "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. **يجب تفعيل رابط التأكيد في إعدادات Supabase/Auth/Email Templates.**",
         'password_reset_error': "خطأ في إعادة تعيين كلمة المرور:",
         
@@ -138,7 +138,7 @@ TRANSLATIONS = {
         'password_label': "Password (6 characters or more)",
         'login_button': "Login",
         'signup_button': "Sign Up",
-        'forgot_password_button': "Forgot Password?",
+        'forgot_password_button': "Forgot Password? (Temporary Login)",
 
         'enter_email_password_warning': "Please enter email and password.",
         'password_length_error': "Error: Password must be at least 6 characters.",
@@ -150,8 +150,8 @@ TRANSLATIONS = {
         'login_invalid': "Invalid login credentials. Please check your email and password.",
         'verification_error': "Login Error:",
         
-        'enter_email_for_reset': "Enter your email to reset password",
-        'send_reset_link_button': "Send Reset Link",
+        'enter_email_for_reset': "Enter your email to send a One-Time Password (OTP)",
+        'send_reset_link_button': "Send Verification Code",
         'password_reset_sent': "A password reset link has been sent to your email. **You must configure the Confirmation URL in Supabase/Auth/Email Templates.**",
         'password_reset_error': "Error resetting password:",
         
@@ -337,7 +337,7 @@ def sign_in_user(email, password):
         error_message = str(e)
         # محاولة تحديد إذا كان الخطأ متعلقاً ببيانات الاعتماد
         if "Invalid login credentials" in error_message or "Invalid login credentials" in error_message or "AuthApiError" in error_message:
-             st.error(t('login_invalid'))
+            st.error(t('login_invalid'))
         else:
             st.error(f"{t('verification_error')} {e}")
 
@@ -365,16 +365,22 @@ def verify_otp_code(email, token):
             st.error(f"{t('otp_error')} {e}")
 
 def reset_password(email):
-    """إرسال رابط إعادة تعيين كلمة المرور. (التحقق من الإعدادات الخارجية مهم جداً)"""
+    """
+    إرسال رمز OTP لتمكين المستخدم من الدخول مؤقتاً عند نسيان كلمة المرور.
+    """
     if not supabase: return
     try:
-        # استخدام الدالة الصحيحة لإرسال رابط إعادة التعيين
-        # **ملاحظة هامة:** لكي تعمل هذه الخاصية، يجب عليك:
-        # 1. الذهاب إلى Supabase -> Authentication -> Email Templates.
-        # 2. التأكد من تفعيل قالب "Password Recovery" وتحديد "Confirmation URL" صحيح.
-        supabase.auth.reset_password_for_email(email)
-        st.success(t('password_reset_sent'))
-        st.session_state['auth_mode'] = 'login' # العودة لنموذج الدخول بعد الإرسال
+        # استخدام sign_in_with_otp لإرسال رمز التحقق
+        supabase.auth.sign_in_with_otp({"email": email})
+        
+        # تخزين البريد الإلكتروني مؤقتاً والانتقال إلى وضع التحقق
+        st.session_state['temp_email'] = email
+        st.session_state['auth_mode'] = 'otp_verify'
+        
+        # إظهار رسالة النجاح الخاصة بإرسال الرمز
+        st.success(t('otp_sent_info'))
+        st.rerun() 
+        
     except Exception as e:
         st.error(f"{t('password_reset_error')} {e}")
 
@@ -393,6 +399,9 @@ def logout_user():
         st.error(f"Error during logout: {e}")
 
 # --- دوال إدارة المنتجات والملفات (Product and File Management Functions) ---
+
+# حجم الكأس الواحد بالمليلتر
+GLASS_VOLUME_ML = 250
 
 # دالة رفع الصورة إلى Supabase Storage
 def upload_image_to_storage(image_file):
@@ -445,9 +454,6 @@ def delete_product_from_db(product_id):
         st.error(f"{t('product_deleted_failed')} {e}")
 
 # --- دوال حاسبة المياه والرياضة (Calculator and Exercise Functions) ---
-
-# حجم الكأس الواحد بالمليلتر
-GLASS_VOLUME_ML = 250
 
 def calculate_water_intake(weight_kg, age_years):
     if weight_kg <= 15 or age_years <= 5: 
@@ -568,12 +574,13 @@ def show_auth_page():
                 if email:
                     reset_password(email)
                 else:
-                    st.warning(t('enter_email_warning'))
+                    st.warning(t('enter_email_password_warning'))
 
 def show_home_page():
     st.title(t('welcome'))
     
-    st.image(f"https://placehold.co/800x200/50C878/FFFFFF?text=Diabetes+Assistant", caption=t('app_title'), use_column_width=True)
+    # تم تصحيح طريقة عرض الصورة ووصفها
+    st.image("", caption=t('app_title'), use_column_width=True)
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -598,6 +605,7 @@ def show_products_page():
                 st.subheader(f"{product['name']} - {t('suitability_label')}: {suitability_text}")
                 
                 try:
+                    # نستخدم رابط الصورة مباشرة إذا كان متوفراً
                     st.image(product['image_url'], width=200)
                 except Exception:
                     st.warning(t('loading_image_error') + f" {product['image_url']}")
@@ -617,7 +625,7 @@ def show_products_page():
 def show_admin_page():
     st.title(t('admin_dashboard'))
     admin_password = st.text_input(t('admin_password'), type="password")
-    SECRET_CODE = "admin123"
+    SECRET_CODE = "admin123" # كلمة المرور الافتراضية للمسؤول
     if admin_password == SECRET_CODE:
         show_add_product_form()
         st.markdown("---")
@@ -757,7 +765,7 @@ def show_water_calculator_page():
     st.markdown("---")
     st.subheader(f"💧 {t('daily_goal')}")
     
-    # FIX: تعريف المتغيرات المحلية من حالة الجلسة وتجهيزها
+    # تعريف المتغيرات المحلية من حالة الجلسة وتجهيزها
     water_goal_ml = st.session_state.get('water_goal_liters', 0.0) * 1000
     consumed_ml = st.session_state.get('water_consumed_ml', 0) 
 
@@ -771,7 +779,6 @@ def show_water_calculator_page():
         progress_percent = 0
 
     # عرض التقدم 
-    # FIX: تهريب (\) لضمان عرض الـ LaTeX بشكل صحيح في f-string
     st.markdown(f"**{t('current_consumption')}:** $${consumed_ml} \\text{{ml}} / {water_goal_ml:.0f} \\text{{ml}}$$")
     st.progress(progress_ratio, text=f"{progress_percent}%")
 
@@ -790,19 +797,22 @@ def show_water_calculator_page():
     with col2:
         st.button(t('reset_water'), on_click=reset_water_intake, use_container_width=True)
 
-    # نصائح عامة (لم تتغير)
+    # نصائح عامة 
     st.markdown("---")
     with st.expander(t('water_tips_title')):
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip1')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip2')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip3')}")
-        st.write(f"- **{t('water_tips_title')}:** {t('water_tip4')}")
+        st.write(f"- **{t('water_tip1')}**")
+        st.write(f"- **{t('water_tip2')}**")
+        st.write(f"- **{t('water_tip3')}**")
+        st.write(f"- **{t('water_tip4')}**")
 
 
 def show_exercise_page():
     st.title(t('exercise_title'))
     st.write(t('exercise_desc'))
-    st.image("https://placehold.co/600x200/98FB98/000000?text=Exercise+and+Health")
+    st.image("
+
+[Image of person jogging outdoors]
+", caption=t('exercise_title'), use_column_width=True)
     with st.form(key="exercise_form_key"):
         age = st.number_input(t('age_years'), min_value=5, value=30) 
         weight = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
