@@ -581,14 +581,14 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    st.image("http://googleusercontent.com/image_collection/image_retrieval/some_id_string") # 
+    # التعديل هنا: استخدام الوصف بدلاً من المعرّف
+    st.image("
 
 [Image of an illustration of a person drinking water next to a plate with healthy food]
-
+", caption=t('app_title'), use_column_width=True)
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
-
 def show_products_page():
     st.title(t('products_page'))
     st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Foods")
@@ -875,6 +875,7 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
+
 
 
 
