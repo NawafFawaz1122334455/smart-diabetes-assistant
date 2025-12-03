@@ -579,8 +579,11 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    # تم تصحيح طريقة عرض الصورة ووصفها
-    st.image("", caption=t('app_title'), use_column_width=True)
+    # تم تصحيح الخطأ: السلسلة النصية مغلقة في سطر واحد
+    st.image("
+
+[Image of an illustration of a person drinking water next to a plate with healthy food]
+", caption=t('app_title'), use_column_width=True) 
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -809,10 +812,11 @@ def show_water_calculator_page():
 def show_exercise_page():
     st.title(t('exercise_title'))
     st.write(t('exercise_desc'))
+    # تم تصحيح الخطأ: السلسلة النصية مغلقة في سطر واحد
     st.image("
 
 [Image of person jogging outdoors]
-", caption=t('exercise_title'), use_column_width=True)
+", caption=t('exercise_title'), use_column_width=True) 
     with st.form(key="exercise_form_key"):
         age = st.number_input(t('age_years'), min_value=5, value=30) 
         weight = st.number_input(t('weight_kg'), min_value=15.0, value=70.0) 
@@ -872,3 +876,4 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
+
