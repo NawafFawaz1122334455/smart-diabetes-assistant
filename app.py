@@ -246,6 +246,7 @@ def send_otp(email):
     if not supabase: return
     try:
         # sign_in_with_otp يتعامل مع تسجيل الدخول والتسجيل في نفس الوقت
+        # ملاحظة: هذا يتطلب إعداد Supabase Auth مع تمكين Email OTP.
         supabase.auth.sign_in_with_otp({"email": email})
         st.session_state['otp_sent'] = True
         st.session_state['user_email'] = email
@@ -257,13 +258,17 @@ def verify_otp(email, token):
     """التحقق من رمز OTP."""
     if not supabase: return
     try:
+        # ملاحظة: نوع المصادقة يجب أن يكون 'email' لـ sign_in_with_otp
         response = supabase.auth.verify_otp({"email": email, "token": token, "type": "email"})
-        if response.user:
+        
+        # يجب فحص وجود 'user' في استجابة Supabase
+        if hasattr(response, 'user') and response.user:
             st.session_state['user'] = response.user
             st.session_state['otp_sent'] = False
             st.session_state['user_email'] = ""
             st.session_state['page'] = 'Home'
             st.success(t('verification_success'))
+            st.rerun() # إعادة تشغيل التطبيق لإظهار واجهة المستخدم الجديدة
         else:
             st.error(t('otp_invalid'))
     except Exception as e:
@@ -278,6 +283,7 @@ def logout_user():
         st.session_state['user_email'] = ""
         st.session_state['page'] = 'Home'
         st.info(t('logged_out'))
+        st.rerun() # إعادة تشغيل التطبيق بعد تسجيل الخروج
     except Exception as e:
         st.error(f"Error during logout: {e}")
 
@@ -310,7 +316,6 @@ def upload_image_to_storage(image_file):
         st.error(f"{t('image_upload_error')} {e}")
         return None
 
-# تم تحديث الدالة لتشمل 'carbs'
 def add_new_product(name, calories, sugar, protein, fats, carbs, suitability, image_url):
     if not supabase: return
     try:
@@ -371,6 +376,7 @@ def get_exercise_recommendation(age, weight):
 def show_auth_page():
     st.title(t('login_register'))
     
+    # رسالة توضيحية لعملية المصادقة الحالية
     st.markdown(f"*{t('otp_note')}*")
     
     if not st.session_state['otp_sent']:
@@ -383,7 +389,7 @@ def show_auth_page():
                 st.warning(t('enter_email_warning'))
     else:
         with st.form(key="verify_otp_form_key"):
-            st.write(f"{t('code_sent_to')} {st.session_state['user_email']}")
+            st.write(f"**{t('code_sent_to')}** {st.session_state['user_email']}")
             token = st.text_input(t('enter_code'))
             submit_button = st.form_submit_button(t('verify_code'))
             if submit_button and token:
@@ -394,9 +400,8 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    # الصورة الجديدة التي تعبر عن اسم البرنامج بالإنجليزية
-    image_text = t('app_title').replace(" ", "+") # لضمان ظهور النص الإنجليزي في البلايس هولدر
-    st.image(f"https://placehold.co/800x200/50C878/FFFFFF?text={image_text}", caption=t('app_title'), use_column_width=True)
+    # **تم تعديل هذا الرابط:** استخدام رابط ثابت للمربع الأخضر كخلفية لعدم الاعتماد على النص العربي في الصورة.
+    st.image(f"https://placehold.co/800x200/50C878/FFFFFF?text=Diabetes+Assistant", caption=t('app_title'), use_column_width=True)
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -408,15 +413,23 @@ def show_products_page():
     try:
         query = supabase.table("products").select("*")
         if search_query:
-            query = query.like("name", f"%{search_query}%")
+            # البحث الجزئي
+            query = query.ilike("name", f"%{search_query}%")
         products = query.execute().data
         if products:
             for product in products:
-                # استخدام الترجمة لتصنيف الملاءمة
-                suitability_text = t(product['suitability'].lower().replace(" ", "_")) 
+                # ترجمة مفتاح الملائمة المخزن في قاعدة البيانات (مثل 'suitable') إلى اللغة الحالية
+                suitability_key = product['suitability'].lower().replace(" ", "_")
+                suitability_text = TRANSLATIONS.get(st.session_state.get('language', 'ar'), {}).get(suitability_key, suitability_key) 
                 
                 st.subheader(f"{product['name']} - {t('suitability_label')}: {suitability_text}")
-                st.image(product['image_url'], width=200)
+                
+                # استخدام try-except للتحكم في فشل تحميل الصورة
+                try:
+                    st.image(product['image_url'], width=200)
+                except Exception:
+                    st.warning(t('loading_image_error') + f" {product['image_url']}")
+
                 st.write(f"**{t('calories')}:** {product['calories']}")
                 carbs_value = product.get('carbs')
                 st.write(f"**{t('carbs_g')}:** {carbs_value if carbs_value is not None else 'N/A'}")
@@ -442,7 +455,10 @@ def show_admin_page():
 
 def show_add_product_form():
     st.subheader(t('add_product'))
-    suitability_options = [t('suitable'), t('moderately_suitable'), t('not_suitable')]
+    # الحصول على الخيارات المترجمة للملائمة
+    suitability_keys = ['suitable', 'moderately_suitable', 'not_suitable']
+    suitability_options_translated = [t(key) for key in suitability_keys]
+    
     with st.form(key="add_product_form_key"):
         product_name = st.text_input(t('product_name'))
         calories = st.number_input(t('calories'), min_value=0)
@@ -450,7 +466,8 @@ def show_add_product_form():
         carbs = st.number_input(t('carbs_g'), min_value=0.0)
         protein = st.number_input(t('protein_g'), min_value=0.0)
         fats = st.number_input(t('fats_g'), min_value=0.0)
-        suitability = st.selectbox(t('suitability_question'), suitability_options)
+        # استخدام الخيارات المترجمة في واجهة المستخدم
+        suitability_translated = st.selectbox(t('suitability_question'), suitability_options_translated)
         uploaded_image = st.file_uploader(t('upload_image'), type=["png", "jpg", "jpeg"])
         submit_button = st.form_submit_button(t('add_product_button'))
         if submit_button:
@@ -458,9 +475,9 @@ def show_add_product_form():
                 with st.spinner(t('adding_product_spinner')):
                     image_url = upload_image_to_storage(uploaded_image)
                     if image_url:
-                        # نستخدم القيمة الإنجليزية (المفتاح) لحفظها في قاعدة البيانات
-                        db_suitability = suitability_options[suitability_options.index(suitability)].lower().replace(" ", "_")
-                        add_new_product(product_name, calories, sugar, protein, fats, carbs, db_suitability, image_url)
+                        # نستخدم القيمة الإنجليزية (المفتاح) الموافق للخيار المترجم لحفظها في قاعدة البيانات
+                        db_suitability_key = suitability_keys[suitability_options_translated.index(suitability_translated)]
+                        add_new_product(product_name, calories, sugar, protein, fats, carbs, db_suitability_key, image_url)
             else:
                 st.warning(t('fill_all_fields'))
 
@@ -469,13 +486,20 @@ def show_edit_delete_form():
     try:
         products = supabase.table("products").select("*").execute().data
         if products:
+            # استخدام قاموس يربط اسم المنتج بالكائن كاملاً
             product_names = {product['name']: product for product in products}
             selected_product_name = st.selectbox(t('select_product_to_edit'), list(product_names.keys()))
 
             if selected_product_name:
                 selected_product = product_names[selected_product_name]
+                
+                # استخدام مفاتيح الملائمة الإنجليزية والقيم المترجمة
+                suitability_options_keys = ['suitable', 'moderately_suitable', 'not_suitable']
+                suitability_options_translated = [t(key) for key in suitability_options_keys]
+                
                 with st.form(key="edit_product_form_key"):
-                    st.image(selected_product['image_url'], width=200)
+                    st.image(selected_product.get('image_url', 'https://placehold.co/200x200'), width=200) # إضافة رابط بلايس هولدر احتياطي
+                    
                     new_name = st.text_input(t('product_name'), value=selected_product['name'])
                     new_calories = st.number_input(t('calories'), value=selected_product['calories'], min_value=0)
 
@@ -488,16 +512,12 @@ def show_edit_delete_form():
                     new_protein = st.number_input(t('protein_g'), value=safe_number('protein', selected_product), min_value=0.0)
                     new_fats = st.number_input(t('fats_g'), value=safe_number('fats', selected_product), min_value=0.0)
                     
-                    # استرجاع الخيارات والقيمة الحالية باللغة المختارة
-                    db_suitability_key = selected_product['suitability'].lower().replace(" ", "_")
-                    suitability_options_keys = ['suitable', 'moderately_suitable', 'not_suitable']
-                    suitability_options_translated = [t(key) for key in suitability_options_keys]
+                    # تحديد القيمة الافتراضية المترجمة (القيمة المخزنة هي المفتاح الإنجليزي)
+                    db_suitability_key = selected_product['suitability'] if selected_product['suitability'] in suitability_options_keys else suitability_options_keys[0]
+                    current_translated_value = t(db_suitability_key)
                     
-                    try:
-                        # تحديد الفهرس بناءً على المفتاح المخزن في قاعدة البيانات
-                        current_index = suitability_options_keys.index(db_suitability_key)
-                    except ValueError:
-                        current_index = 0
+                    # تحديد الفهرس للـ selectbox
+                    current_index = suitability_options_translated.index(current_translated_value)
 
                     new_suitability_translated = st.selectbox(t('suitability_question'), suitability_options_translated, index=current_index)
                     new_image = st.file_uploader(t('upload_new_image'), type=["png", "jpg", "jpeg"])
@@ -513,15 +533,28 @@ def show_edit_delete_form():
                         if new_image:
                             with st.spinner(t('updating_image_spinner')):
                                 image_url_to_update = upload_image_to_storage(new_image)
-                        if image_url_to_update:
-                            # إعادة القيمة المختارة إلى المفتاح الإنجليزي (الذي يُخزن في DB)
-                            db_suitability_update = suitability_options_keys[suitability_options_translated.index(new_suitability_translated)]
-                            data_to_update = {"name": new_name, "calories": new_calories, "sugar": new_sugar, "carbs": new_carbs, "protein": new_protein, "fats": new_fats, "suitability": db_suitability_update}
-                            if new_image: data_to_update["image_url"] = image_url_to_update
-                            update_product_in_db(selected_product['id'], data_to_update)
+                        
+                        # إعادة القيمة المختارة إلى المفتاح الإنجليزي (الذي يُخزن في DB)
+                        db_suitability_update = suitability_options_keys[suitability_options_translated.index(new_suitability_translated)]
+                        
+                        data_to_update = {
+                            "name": new_name, 
+                            "calories": new_calories, 
+                            "sugar": new_sugar, 
+                            "carbs": new_carbs, 
+                            "protein": new_protein, 
+                            "fats": new_fats, 
+                            "suitability": db_suitability_update
+                        }
+                        if new_image: 
+                            data_to_update["image_url"] = image_url_to_update
+                            
+                        update_product_in_db(selected_product['id'], data_to_update)
+                        st.rerun()
 
                     if delete_button:
                         delete_product_from_db(selected_product['id'])
+                        st.rerun() # إعادة تشغيل التطبيق لعرض القائمة المحدثة
         else:
             st.info(t('no_products_available'))
     except Exception as e:
@@ -574,10 +607,16 @@ st.sidebar.title(t('navigation'))
 lang_options = {'العربية': 'ar', 'English': 'en'}
 current_lang_display = 'العربية' if st.session_state['language'] == 'ar' else 'English'
 selected_lang_display = st.sidebar.radio("Language / اللغة", list(lang_options.keys()), index=list(lang_options.keys()).index(current_lang_display))
-st.session_state['language'] = lang_options[selected_lang_display]
+
+# إذا تم تغيير اللغة، قم بتحديثها وإعادة التشغيل
+if st.session_state['language'] != lang_options[selected_lang_display]:
+    st.session_state['language'] = lang_options[selected_lang_display]
+    st.rerun()
 
 if st.session_state['user']:
-    st.sidebar.button(t('logout'), on_click=logout_user)
+    # إذا كان المستخدم مسجلاً دخوله، اعرض خيارات التطبيق
+    if st.sidebar.button(t('logout')):
+        logout_user()
     
     # تحديد أسماء الصفحات المترجمة
     page_options = {
@@ -588,20 +627,25 @@ if st.session_state['user']:
         t('exercise_page'): show_exercise_page
     }
     
-    # للتأكد من أن التنقل لا ينكسر بعد تغيير اللغة
-    page_name_key = st.session_state['page'] # Key stored is 'Home', 'Products', etc.
+    # قائمة بأسماء الدوال (المفاتيح غير المترجمة)
+    page_function_names = {func.__name__.replace('show_', '').replace('_page', '').capitalize(): func for func in page_options.values()}
     
     # البحث عن الاسم المترجم الحالي للصفحة
-    translated_page_names = {v.__name__.replace('show_', '').replace('_page', '').capitalize(): k for k, v in page_options.items()}
-    current_page_translated_name = translated_page_names.get(page_name_key, t('home_page'))
+    # هذا يضمن أننا نستخدم الاسم المترجم الصحيح للصفحة المخزنة في الجلسة (e.g., 'Home')
+    current_page_func = page_function_names.get(st.session_state['page'], show_home_page)
+    current_page_translated_name = [k for k, v in page_options.items() if v == current_page_func][0]
 
+    # قائمة الـ Radio button تستخدم الأسماء المترجمة
     page_name_translated = st.sidebar.radio(t('navigation'), list(page_options.keys()), index=list(page_options.keys()).index(current_page_translated_name))
     
-    # تحديث اسم الصفحة المخزن ليتوافق مع المفتاح (مثل Home, Products) لتجنب كسر التنقل
+    # تحديث وتنفيذ الصفحة المختارة
     for name, func in page_options.items():
         if name == page_name_translated:
+            # تحديث اسم الصفحة المخزن ليتوافق مع مفتاح الدالة (مثل 'Home')
             st.session_state['page'] = func.__name__.replace('show_', '').replace('_page', '').capitalize()
             func()
             break
 else:
+    # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
+
