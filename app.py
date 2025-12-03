@@ -579,8 +579,9 @@ def show_auth_page():
 def show_home_page():
     st.title(t('welcome'))
     
-    # هذا هو السطر الذي يجب أن يكون في ملفك:
-    st.image("[Image of an illustration of a person drinking water next to a plate with healthy food]", caption=t('app_title'), use_column_width=True) 
+    # *** استخدم رابط URL ثابت للصورة بدلاً من الوصف ***
+    # هذا الرابط سيعرض صورة Placeholder صحية
+    st.image("https://placehold.co/600x200/50C878/FFFFFF?text=Healthy+Lifestyle", caption=t('app_title'), use_column_width=True) 
     
     st.write(t('app_purpose'))
     st.write(t('explore_features'))
@@ -872,5 +873,6 @@ if st.session_state['user']:
 else:
     # إذا لم يسجل الدخول، اعرض صفحة المصادقة
     show_auth_page()
+
 
 
