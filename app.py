@@ -959,17 +959,83 @@ if st.session_state['user']:
         t('exercise_page'): show_exercise_page
     }
     
-    current_page_func_name = st.session_state['page'].lower() + '_page'
-    current_page_translated_name = next((k for k, v in page_options.items() if v.__name__ == 'show_' + current_page_func_name), t('home_page'))
+# --- الكود الذي يحدد خيارات التنقل للمستخدم المسجل دخوله ---
 
-    page_name_translated = st.sidebar.radio(t('navigation'), list(page_options.keys()), index=list(page_options.keys()).index(current_page_translated_name))
+# خيارات التنقل المتاحة للمستخدم المسجل دخوله
+page_options = {
+    t('home_page'): show_home_page,
+    t('products_page'): show_products_page,
+    t('exercise_page'): show_exercise_calculator, # تم تغيير الاسم ليتوافق مع الدالة
+    t('water_page'): show_water_page,
+}
+
+# إضافة صفحة المسؤول إذا كان المستخدم مسؤولاً
+admin_email = os.environ.get("ADMIN_EMAIL")
+if st.session_state['user'].email == admin_email:
+    page_options[t('admin_page')] = show_admin_page
+
+
+# --- بداية رسم الشريط الجانبي ---
+
+# 1. قائمة اللغة (يجب أن تكون دائماً في البداية)
+language_key = st.session_state.get('language', 'ar')
+selected_language = st.sidebar.selectbox(
+    'Language / اللغة',
+    options=['ar', 'en'],
+    index=0 if language_key == 'ar' else 1,
+    format_func=lambda x: 'العربية' if x == 'ar' else 'English'
+)
+if selected_language != language_key:
+    st.session_state['language'] = selected_language
+    st.rerun()
+
+# --- منطق التنقل الرئيسي ---
+
+if st.session_state['user']:
     
-    for name, func in page_options.items():
-        if name == page_name_translated:
-            st.session_state['page'] = func.__name__.replace('show_', '').replace('_page', '').capitalize()
-            func()
-            break
+    # 2. أزرار التنقل (باستخدام st.sidebar.radio)
+    # ملاحظة: تم تعديل منطق استخلاص اسم الصفحة الحالية ليتناسب مع استخدام الدالة
+    current_page_name = st.session_state['page'].capitalize()
+    
+    # ابحث عن المفتاح المقابل (الترجمة) لاسم الدالة الحالية
+    current_page_translated_name = next((
+        name for name, func in page_options.items() 
+        if func.__name__ == 'show_' + current_page_name.lower().replace('home', 'home_page').replace('products', 'products_page')
+    ), t('home_page'))
+    
+    st.sidebar.subheader(t('navigation'))
+    page_name_translated = st.sidebar.radio(
+        t('navigation'), 
+        list(page_options.keys()), 
+        index=list(page_options.keys()).index(current_page_translated_name),
+        key='main_nav_radio'
+    )
+    
+    # تحديد الدالة المناسبة بناءً على الاختيار
+    selected_function = page_options[page_name_translated]
+    
+    # تحديث حالة الصفحة لتعكس الاختيار الجديد 
+    st.session_state['page'] = selected_function.__name__.replace('show_', '').replace('_page', '').capitalize()
+    
+    
+    # 3. المنطقة السفلية: إدارة الحساب وتسجيل الخروج
+    st.sidebar.markdown("---")
+    
+    # 🎯🎯 الزر المطلوب: إعادة تعيين كلمة المرور 🎯🎯
+    # هذا الزر يجب أن يكون Button عادي وليس Radio
+    if st.sidebar.button(t('reset_password_button'), key='reset_pw_btn'):
+        user_email = st.session_state['user'].email
+        handle_password_reset(supabase, user_email) # استدعاء الدالة الجديدة
+        
+    # زر تسجيل الخروج
+    if st.sidebar.button(t('logout'), key='logout_btn'):
+        logout_user()
+
+    # 4. استدعاء الدالة المختارة لعرض محتوى الصفحة
+    selected_function()
+
 else:
+    # المستخدم غير مسجل دخوله (شاشة تسجيل الدخول/التسجيل)
     show_auth_page()
 
 
