@@ -118,11 +118,15 @@ TRANSLATIONS = {
         'image_upload_error': "خطأ في رفع الصورة:",
         'db_config_error': "خطأ: لم يتم تعيين متغيرات بيئة Supabase. يرجى التحقق من ملف .env الخاص بك.",
         'db_connect_error': "خطأ في الاتصال بـ Supabase:",
-        'rec_realistic_input': "الرجاء إدخال عمر ووزن واقعيين للحصول على توصية موثوقة. بالنسبة للأطفال الصغار جداً، يجب أن يركز النشاط البدني على اللعب الحر.",
-        'rec_under_18': "أنت في سن رائعة للنشاط البدني! ركّز على الأنشطة الممتعة مثل الجري أو السباحة أو الرياضات الجماعية.",
-        'rec_18_40_light': "وزن جيد لسنك! حاول الحفاظ عليه من خلال أنشطة مثل الجري وركوب الدراجات وتمارين الأثقال.",
-        'rec_18_40_heavy': "فكّر في تمارين الكارديو المعتدلة مثل المشي السريع أو الهرولة أو السباحة للتحكم في الوزن. استشر مدرباً للحصول على خطة مناسبة.",
-        'rec_over_40': "ركّز على التمارين منخفضة التأثير مثل المشي أو السباحة أو اليوجا. هذه الأنشطة لطيفة على المفاصل وممتازة للتحكم في سكر الدم.",
+        'rec_realistic_input': "الرجاء إدخال عمر ووزن واقعيين. يرجى استشارة الطبيب أو أخصائي التغذية لتحديد الخطة المناسبة.",
+        'rec_under_18_updated': "**الأطفال والمراهقون:** ركز على **ساعة** من النشاط البدني الممتع يومياً مثل اللعب الحر والسباحة أو الرياضات الجماعية. **ملاحظة غذائية:** تأكد من تناول وجبات متوازنة لتلبية احتياجات النمو والطاقة.",
+        
+        'rec_18_40_underweight': "**نحافة (تحتاج زيادة):** ركز على تمارين **الأثقال والمقاومة** لبناء الكتلة العضلية. **خطة غذائية:** تحتاج لزيادة السعرات الحرارية الصحية والبروتين (استشر أخصائي تغذية).",
+        'rec_18_40_healthy': "**وزن صحي:** استمر في المزيج الحالي من تمارين الكارديو (جري، سباحة) وتمارين القوة 3-5 مرات أسبوعياً للحفاظ على وزنك وصحتك العامة.",
+        'rec_18_40_overweight': "**وزن زائد/سمنة:** الأولوية لتمارين **الكارديو المعتدلة (مثل المشي السريع والهرولة)** منخفضة التأثير لمدة 150 دقيقة أسبوعياً. **خطة غذائية:** التركيز على تقليل السعرات الحرارية والسكريات والكربوهيدرات المصنعة.",
+        
+        'rec_over_40_light': "**نحافة/وزن صحي:** ركز على **المرونة والتحمل** بتمارين منخفضة التأثير مثل اليوغا والمشي والسباحة. حافظ على نظامك الغذائي الغني بالبروتين.",
+        'rec_over_40_heavy': "**وزن زائد/سمنة:** التمارين المثلى هي **السباحة أو المشي أو ركوب الدراجات الثابتة** لتجنب إجهاد المفاصل. **خطة غذائية:** يجب أن تركز على الأطعمة الغنية بالألياف والمعادن لتعزيز الشبع والتحكم بالسكر.",
         # مفاتيح جديدة لإدارة الصور
         'manage_page_images': "إدارة صور الصفحات الرئيسية",
         'home_image': "صورة صفحة الرئيسية",
@@ -247,11 +251,15 @@ TRANSLATIONS = {
         'image_upload_error': "Error uploading image:",
         'db_config_error': "Error: Supabase environment variables are not set. Please check your .env file.",
         'db_connect_error': "Error connecting to Supabase:",
-        'rec_realistic_input': "Please enter a realistic age and weight to get a reliable recommendation. For very young children, physical activity should focus on free play.",
-        'rec_under_18': "You are in a great age for physical activity! Focus on playful activities like running, swimming, or team sports.",
-        'rec_18_40_light': "Good weight for your age! Try to maintain it with activities like running, cycling, and weight training.",
-        'rec_18_40_heavy': "Consider moderate-intensity cardio like brisk walking, jogging, or swimming to manage weight. Consult a trainer for a suitable plan.",
-        'rec_over_40': "Focus on low-impact exercises like walking, swimming, or yoga. These activities are gentle on joints and great for blood sugar control.",
+       'rec_realistic_input': "Please enter a realistic age and weight. Please consult a doctor or dietitian for the appropriate plan.",
+        'rec_under_18_updated': "**Children & Teens:** Focus on **one hour** of fun physical activity daily, such as free play, swimming, or team sports. **Diet Note:** Ensure a balanced diet to meet growth and energy needs.",
+        
+        'rec_18_40_underweight': "**Underweight (Needs Gain):** Focus on **strength and resistance training** to build muscle mass. **Diet Plan:** You need to increase healthy calories and protein intake (consult a dietitian).",
+        'rec_18_40_healthy': "**Healthy Weight:** Continue a mix of cardio (running, swimming) and strength training 3-5 times a week to maintain your weight and overall health.",
+        'rec_18_40_overweight': "**Overweight/Obesity:** Prioritize **moderate cardio (like brisk walking and jogging)** with low impact for 150 minutes per week. **Diet Plan:** Focus on reducing calories, sugars, and processed carbs.",
+        
+        'rec_over_40_light': "**Underweight/Healthy Weight:** Focus on **flexibility and endurance** with low-impact exercises like yoga, walking, and swimming. Maintain your high-protein diet.",
+        'rec_over_40_heavy': "**Overweight/Obesity:** Optimal exercises are **swimming, walking, or stationary cycling** to avoid joint strain. **Diet Plan:** Your focus should be on fiber-rich and mineral-rich foods to boost satiety and blood sugar control.",
         # مفاتيح جديدة لإدارة الصور
         'manage_page_images': "Manage Main Page Images",
         'home_image': "Home Page Image",
@@ -505,19 +513,38 @@ def calculate_water_intake(weight_kg, age_years):
         recommended_ml = weight_kg * 25
     return recommended_ml / 1000
 
+# --- الكود الجديد الذي يجب وضعه بدلاً من القديم ---
 def get_exercise_recommendation(age, weight):
-    if age <= 5 or weight <= 15:
+    # حالة الأوزان والأعمار غير الواقعية أو غير المناسبة للتصنيف
+    if age < 5 or weight < 15:
         return t('rec_realistic_input')
         
+    # --- الفئة العمرية 1: الأطفال والمراهقون (أقل من 18 سنة) ---
     if age < 18:
-        return t('rec_under_18')
+        # لا نستخدم الوزن لتصنيف السمنة/النحافة، بل نركز على النشاط العام
+        return t('rec_under_18_updated')
+    
+    # --- الفئة العمرية 2: البالغون (18 - 40 سنة) ---
     elif age <= 40:
-        if weight < 70:
-            return t('rec_18_40_light')
+        if weight < 60:
+            # نحيف
+            return t('rec_18_40_underweight')
+        elif 60 <= weight <= 80:
+            # وزن صحي
+            return t('rec_18_40_healthy')
+        else: # weight > 80
+            # وزن زائد/سمنة
+            return t('rec_18_40_overweight')
+            
+    # --- الفئة العمرية 3: كبار السن (فوق 40 سنة) ---
+    else: # age > 40
+        if weight < 70: # تم رفع الحد قليلاً لكبار السن
+            # نحيف/نحافة طبيعية
+            return t('rec_over_40_light')
         else:
-            return t('rec_18_40_heavy')
-    else:
-        return t('rec_over_40')
+            # وزن زائد/سمنة
+            return t('rec_over_40_heavy')
+# ----------------------------------------------------------------
 
 def log_water_intake():
     st.session_state['water_consumed_ml'] = st.session_state.get('water_consumed_ml', 0) + GLASS_VOLUME_ML
@@ -918,4 +945,5 @@ if st.session_state['user']:
             break
 else:
     show_auth_page()
+
 
