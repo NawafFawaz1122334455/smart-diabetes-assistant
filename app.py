@@ -427,10 +427,7 @@ def handle_password_reset(client, email):
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
-def logout_user():
-    """تسجيل خروج المستخدم ومسح حالة الجلسة."""
-    if not supabase: return
-# ... بقية الدالة
+
 def logout_user():
     """تسجيل خروج المستخدم ومسح حالة الجلسة."""
     if not supabase: return
@@ -974,6 +971,7 @@ if st.session_state['user']:
             break
 else:
     show_auth_page()
+
 
 
 
