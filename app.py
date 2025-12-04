@@ -124,6 +124,10 @@ TRANSLATIONS = {
         'rec_18_40_underweight': "**نحافة (تحتاج زيادة):** ركز على تمارين **الأثقال والمقاومة** لبناء الكتلة العضلية. **خطة غذائية:** تحتاج لزيادة السعرات الحرارية الصحية والبروتين (استشر أخصائي تغذية).",
         'rec_18_40_healthy': "**وزن صحي:** استمر في المزيج الحالي من تمارين الكارديو (جري، سباحة) وتمارين القوة 3-5 مرات أسبوعياً للحفاظ على وزنك وصحتك العامة.",
         'rec_18_40_overweight': "**وزن زائد/سمنة:** الأولوية لتمارين **الكارديو المعتدلة (مثل المشي السريع والهرولة)** منخفضة التأثير لمدة 150 دقيقة أسبوعياً. **خطة غذائية:** التركيز على تقليل السعرات الحرارية والسكريات والكربوهيدرات المصنعة.",
+
+        'reset_password_button': 'إعادة تعيين كلمة المرور',
+        'reset_password_success': 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.',
+        'reset_password_error': 'حدث خطأ أثناء طلب إعادة التعيين. الرجاء المحاولة مرة أخرى.',
         
         'rec_over_40_light': "**نحافة/وزن صحي:** ركز على **المرونة والتحمل** بتمارين منخفضة التأثير مثل اليوغا والمشي والسباحة. حافظ على نظامك الغذائي الغني بالبروتين.",
         'rec_over_40_heavy': "**وزن زائد/سمنة:** التمارين المثلى هي **السباحة أو المشي أو ركوب الدراجات الثابتة** لتجنب إجهاد المفاصل. **خطة غذائية:** يجب أن تركز على الأطعمة الغنية بالألياف والمعادن لتعزيز الشبع والتحكم بالسكر.",
@@ -145,7 +149,12 @@ TRANSLATIONS = {
         'explore_features': "Use the navigation menu to explore different features.",
         'login_register': "Login or Register",
         'otp_note': "Note: Login and registration are handled using Email, Password, and a One-Time Password (OTP) for verification.",
-        
+
+        'reset_password_button': 'Reset Password',
+        'reset_password_success': 'A password reset link has been sent to your email. Please check your inbox.',
+        'reset_password_error': 'An error occurred during the reset request. Please try again.',
+
+    
         # New Auth Keys
         'enter_email': "Email",
         'password_label': "Password (6 characters or more)",
@@ -401,7 +410,27 @@ def reset_password(email):
         
     except Exception as e:
         st.error(f"{t('password_reset_error')} {e}")
+# ----------------------------------------------------------------------
+# دالة معالجة إعادة تعيين كلمة المرور (جديدة)
+# ----------------------------------------------------------------------
+def handle_password_reset(client, email):
+    """
+    تُرسل طلب إعادة تعيين كلمة المرور إلى Supabase للبريد الإلكتروني الحالي للمستخدم.
+    """
+    try:
+        # Supabase ترسل رابط إعادة التعيين إلى البريد الإلكتروني.
+        client.auth.reset_password_for_email(email=email)
+        st.success(t('reset_password_success'))
+    except Exception as e:
+        st.error(t('reset_password_error'))
 
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+def logout_user():
+    """تسجيل خروج المستخدم ومسح حالة الجلسة."""
+    if not supabase: return
+# ... بقية الدالة
 def logout_user():
     """تسجيل خروج المستخدم ومسح حالة الجلسة."""
     if not supabase: return
@@ -945,6 +974,7 @@ if st.session_state['user']:
             break
 else:
     show_auth_page()
+
 
 
 
