@@ -951,12 +951,7 @@ if st.session_state['user']:
     if st.sidebar.button(t('logout')):
         logout_user()
     
-    page_options = {
-        t('home_page'): show_home_page, 
-        t('products_page'): show_products_page, 
-        t('admin_page'): show_admin_page, 
-        t('water_page'): show_water_calculator_page, 
-        t('exercise_page'): show_exercise_page
+
     }
     
 # --- الكود الذي يحدد خيارات التنقل للمستخدم المسجل دخوله ---
@@ -1010,8 +1005,9 @@ if st.session_state['user']:
         index=list(page_options.keys()).index(current_page_translated_name),
         key='main_nav_radio'
     )
-    
-  # ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
 ## 🎬 منطق الشريط الجانبي والتشغيل (المنطق الموحد) 🎬
 # ----------------------------------------------------------------------
 
@@ -1021,8 +1017,8 @@ if st.session_state['user']:
 page_options = {
     t('home_page'): show_home_page,
     t('products_page'): show_products_page,
-    t('water_page'): show_water_calculator_page,  # تأكد من أن هذا هو الاسم الصحيح أيضاً
-    t('exercise_page'): show_exercise_page,        # ✅ تم تصحيح الاسم هنا
+    t('water_page'): show_water_calculator_page,  # ✅ تم تصحيح الاسم
+    t('exercise_page'): show_exercise_page,        # ✅ تم تصحيح الاسم
 }
 
 # 2. رسم الشريط الجانبي
