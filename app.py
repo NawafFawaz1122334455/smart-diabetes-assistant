@@ -1021,8 +1021,8 @@ if st.session_state['user']:
 page_options = {
     t('home_page'): show_home_page,
     t('products_page'): show_products_page,
-    t('water_page'): show_water_calculator_page,  # ✅ تم تصحيح الاسم
-    t('exercise_page'): show_exercise_page,        # ✅ تم تصحيح الاسم
+    t('water_page'): show_water_calculator_page,  # تأكد من أن هذا هو الاسم الصحيح أيضاً
+    t('exercise_page'): show_exercise_page,        # ✅ تم تصحيح الاسم هنا
 }
 
 # 2. رسم الشريط الجانبي
@@ -1099,6 +1099,7 @@ if st.session_state['user']:
 else:
     # المستخدم غير مسجل دخوله (شاشة تسجيل الدخول/التسجيل)
     show_auth_page()
+
 
 
 
