@@ -676,7 +676,7 @@ def show_products_page():
 def show_admin_page():
     st.title(t('admin_dashboard'))
     admin_password = st.text_input(t('admin_password'), type="password")
-    SECRET_CODE = "admin123" # كلمة المرور الافتراضية للمسؤول
+    SECRET_CODE = "Nn1122334455" # كلمة المرور الافتراضية للمسؤول
     if admin_password == SECRET_CODE:
         # عرض نموذج إدارة صور الصفحات
         show_page_image_management()
@@ -945,5 +945,6 @@ if st.session_state['user']:
             break
 else:
     show_auth_page()
+
 
 
